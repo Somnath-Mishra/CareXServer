@@ -25,8 +25,12 @@ app.use(bodyParser.json());
 //   res.redirect(`/${uuid4()}`);
 // });
 
-app.get('/', (req, res) => {
-    res.render("index.ejs");
+app.get('/', async(req, res) => {
+    let mode='online';
+    const client=await authorize();
+    const events=await listEvents(client);
+    console.log(events);
+    res.render("index.ejs",{events:events,mode:mode});
 })
 
 app.get('/problem', (req, res) => {
