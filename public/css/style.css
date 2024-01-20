@@ -250,3 +250,52 @@ body {
     justify-self: center;
     margin-top: 100px;
 }
+
+.suggestion .contain {
+    margin: 10px;
+}
+
+.suggestion .contain .docTemplate {
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: #99bbff;
+    box-shadow: 5px 5px 10px grey;
+    border-radius: 10px;
+}
+
+
+.suggestion .contain .docTemplate .profile {
+    display: flex;
+    align-items: center;
+}
+.suggestion .contain .docTemplate .profile img {
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    margin: 10px 10px;
+}
+
+.suggestion .contain .docTemplate .lowerportion {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 10px;
+    padding: 15px;
+}
+
+.suggestion .contain .docTemplate .lowerportion .specialization {
+    display: flex;
+    justify-content: space-evenly;
+    gap: 25px;
+}
+
+.suggestion .contain .docTemplate .lowerportion button {
+    padding: 10px 20px;
+    background-color: #003296;
+    color: whitesmoke;
+    font-size: 20px;
+    border-radius: 15px;
+    box-shadow: 5px 5px 10px grey;
+}
+
