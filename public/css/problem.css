@@ -1,0 +1,57 @@
+
+
+.search-box{
+    margin:80px auto 0;
+    background:#D9D9D9;
+    border-radius: 50%;
+    width:800px;
+    border-radius: 5px;
+}
+
+.row{
+    display: flex;
+    align-items: center;
+    padding:10px 20px;
+}
+
+input{
+    flex:1;
+    height:50px;
+    background: transparent;
+    font-size:1.5rem;
+    border:0;
+    outline:0;
+}
+
+button{
+    background:transparent;
+    border:0;
+    outline:0;
+}
+
+.fa-solid{
+    width:25px;
+    font-size:1.5rem;
+    cursor: pointer;
+}
+
+.result-box ul{
+    list-style-type:none;
+    border-top:1px solid #999;
+    padding:15px 10px;
+}
+
+.result-box ul li{
+    border-radius:3px;
+    padding:15px 10px;
+    cursor:pointer;
+}
+
+.result-box ul li:hover{
+    background:aliceblue;
+}
+
+.result-box{
+    max-height: 300px;
+    overflow-y:scroll;
+}

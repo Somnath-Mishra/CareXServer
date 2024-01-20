@@ -21,9 +21,25 @@ app.use(bodyParser.json());
 
 // let events=[];
 
+// app.get('/', (req, res) => {
+//   res.redirect(`/${uuid4()}`);
+// });
+
 app.get('/', (req, res) => {
-  res.redirect(`/${uuid4()}`);
-});
+    res.render("index.ejs");
+})
+
+app.get('/problem', (req, res) => {
+    res.render("problem.ejs");
+})
+
+app.get('/blog', (req, res) => {
+    res.render("blog.ejs");
+})
+
+app.get('/history', (req, res) => {
+    res.render("history.ejs");
+})
 
 app.get('/appointment',async(req,res)=>{
 
@@ -52,9 +68,9 @@ app.post('/bookAppointment',async (req,res)=>{
   res.redirect('/appointment');
 })
 
-app.get('/:room', (req, res) => {
-  res.render('room', { roomId: req.params.room });
-});
+// app.get('/:room', (req, res) => {
+//   res.render('room', { roomId: req.params.room });
+// });
 
 
 
