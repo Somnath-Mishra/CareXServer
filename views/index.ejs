@@ -51,7 +51,11 @@
         </div>
 
         <div class="details">
-
+            <%events.forEach(event => {%>
+                <h2>Summary : <%= event.summary%></h2>
+                <h2>Start Time : <%= event.start.dateTime%> </h2>
+                <h2>Mode : <%= mode%></h2>    
+            <%});%>
         </div>
     </div>
 
