@@ -180,3 +180,73 @@ body {
     margin-left: 50px;
     margin-right: 200px;
 }
+
+
+.suggestion .contain {
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+.bookApp {
+    margin: 20px;
+    display: flex;
+    justify-content: center;
+}
+.formm {
+    margin-top: 100px;
+    border-radius: 20px;
+    background-color: #dadada;
+    padding: 40px 20px;
+    box-shadow: 5px 5px 10px grey;
+}
+
+.bookApp .formm input {
+    margin: 20px;
+    padding-left:40px;
+    background-color: #bfbfbf;
+    border-radius: 20px;
+    width: 600px;
+    /* text-decoration: underline; */
+    border: 0 0 100px 0;
+    box-shadow: 5px 5px 10px grey;
+}
+
+.bookApp .formm select {
+    margin: 20px;
+    height:50px;
+    padding-left:40px;
+    background-color: #bfbfbf;
+    border-radius: 20px;
+    width: 600px;
+    /* text-decoration: underline; */
+    border: 0 0 100px 0;
+    font-size: 25px;
+    box-shadow: 5px 5px 10px grey;
+}
+
+
+
+::placeholder {
+    padding-left: 20px;
+}
+
+.formm form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.formm button {
+    background-color: #003296;
+    box-shadow: 5px 5px 10px grey;
+    color: white;
+    font-weight: 600;
+    font-size: 30px;
+    border-radius: 10px;
+    padding: 5px 40px;
+    align-self: center;
+    justify-self: center;
+    margin-top: 100px;
+}
