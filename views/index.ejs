@@ -1,0 +1,60 @@
+<%- include("./partials/frameUpper.ejs") %>
+
+<div class="appoint">
+    <div class="schedule utility">
+        <div class="calender">
+            <div class="greet">
+                <% var day = new Date() %>
+                <% var curHr = day.getHours() %>
+                <% let gre %>
+
+                <% if (curHr < 12) { %>
+                <% gre = "Morning" %>
+                <% } else if (curHr < 18) { %>
+                <% gre = "Afternoon" %>
+                <% } else { %>
+                <% gre = "Evening" %>
+                <% } %>
+                <h2 style="margin: 20px 0 0 20px; color: white; letter-spacing: 2px;">Good <%= gre %>, <%= locals.name %></h2>
+            </div>
+            <% Date.prototype.toShortFormat = function() { %>
+
+                <%  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];%>
+                
+                <% const day = this.getDate(); %>
+                
+                <% const monthIndex = this.getMonth(); %>
+                <% const monthName = monthNames[monthIndex]; %>
+                
+                <% const year = this.getFullYear(); %>
+                
+                <% return `${day} ${monthName} ${year}`;  %> 
+            <% } %>
+            
+            <% let today = new Date(); %>
+            
+            <h2 style="margin-left: 20px; margin-bottom: 0;"><%= today.toShortFormat() %></h2>
+
+
+            <div class="month">
+                <% let s = ""; %>
+                <% let s1 = today.toShortFormat(); %>
+                <% for(let i = 3; i < s1.length; i++) { %>
+                 <%    if(s1[i] === " ") break; %>
+                 <%    s += s1[i]; %>
+                <% } %>
+                <h3><%= s %></h3>
+                <div class="nums">
+
+                </div>
+            </div>
+        </div>
+
+        <div class="details">
+
+        </div>
+    </div>
+
+</div>
+
+<%- include("./partials/frameLower.ejs") %>
