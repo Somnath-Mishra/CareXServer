@@ -8,6 +8,8 @@ let availableKeywords=[
     "Fever",
     "Burn Injury/Accidents",
     "Sports Injury",
+    "Chest Pain",
+    "Anxiety"
 ];
 
 const resultsbox=document.querySelector(".result-box");

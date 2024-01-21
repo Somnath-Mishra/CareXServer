@@ -1,25 +1,12 @@
 import express from 'express';
 import path from 'path';
 import bodyParser from 'body-parser';
-import mongoose from 'mongoose';
-import { listEvents, authorize, addEventDetails } from './calender/listEvent.mjs'
-import { ProblemMap } from './SearchDatabase/problemMapWithSpecilization.mjs'
+import {listEvents,authorize,addEventDetails} from './calender/listEvent.mjs'
+
+
 const app = express();
 
-const PORT = 3001;
-
-let doctorsDetails = [];
-
-function isLoggedIn(req, res, next) {
-
-
-  next();
-}
-
-app.use(cookieParser());
-app.use(isLoggedIn());
-
-mongoose.connect("mongodb://127.0.0.1:27017/DoctorsDB")
+const PORT =3001;
 
 app.set('view engine', 'ejs');
 app.set('views', path.resolve("./views"));
@@ -27,14 +14,14 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+// let events=[];
 
+// app.get('/', (req, res) => {
+//   res.redirect(`/${uuid4()}`);
+// });
 
-app.get('/', async (req, res) => {
-  let mode = 'online';
-  const client = await authorize();
-  const events = await listEvents(client);
-  console.log(events);
-  res.render("index.ejs", { events: events, mode: mode });
+app.get('/', (req, res) => {
+    res.render("index.ejs");
 })
 
 app.get('/problem', (req, res) => {
@@ -64,23 +51,22 @@ app.get('/bookAppointment', (req, res) => {
 
 app.post('/bookAppointment', async (req, res) => {
 
-  let summary = req.body.summary;
-  let description = req.body.description;
-  let startDateTime = req.body.startDateTime;
-  addEventDetails(summary, description, startDateTime)
+  let summary=req.body.summary;
+  let location=req.body.location;
+  let description=req.body.description;
+  let startDateTime=req.body.description;
+  let endDateTime=req.body.endDateTime;
+  let timezone=req.body.timeZone;
+  let attendees=req.body.attendees;
+  const client=await authorize();
+  addEventDetails(summary,location,description,startDateTime,endDateTime,timezone,attendees,client)
   res.redirect('/appointment');
 })
 
-app.post('/problem', (req, res) => {
-  doctorsDetails.push(ProblemMap(req.body.search));
-  res.redirect('/doctorSuggestion');
-})
+// app.get('/:room', (req, res) => {
+//   res.render('room', { roomId: req.params.room });
+// });
 
-app.post('/doctorSuggestion', (req, res) => {
-
-  res.render('doctorSuggestion', { doctorsDetails: doctorsDetails });
-
-})
 
 
 app.listen(PORT, () => {
