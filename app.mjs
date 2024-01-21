@@ -1,83 +1,88 @@
 import express from 'express';
-// import http from 'http';
 import path from 'path';
-// import { Server as SocketServer } from 'socket.io';
-// import { v4 as uuid4 } from 'uuid';
 import bodyParser from 'body-parser';
-import {listEvents,authorize,addEventDetails} from './calender/listEvent.mjs'
-
-
+import mongoose from 'mongoose';
+import { listEvents, authorize, addEventDetails } from './calender/listEvent.mjs'
+import { ProblemMap } from './SearchDatabase/problemMapWithSpecilization.mjs'
 const app = express();
-// const server = http.createServer(app);
-// const io = new SocketServer(server);
 
-const PORT =3001;
+const PORT = 3001;
+
+let doctorsDetails = [];
+
+function isLoggedIn(req, res, next) {
+
+
+  next();
+}
+
+app.use(cookieParser());
+app.use(isLoggedIn());
+
+mongoose.connect("mongodb://127.0.0.1:27017/DoctorsDB")
 
 app.set('view engine', 'ejs');
 app.set('views', path.resolve("./views"));
 app.use(express.static('public'));
-app.use(bodyParser.urlencoded({extended:false}));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// let events=[];
 
-// app.get('/', (req, res) => {
-//   res.redirect(`/${uuid4()}`);
-// });
 
-app.get('/', async(req, res) => {
-    let mode='online';
-    const client=await authorize();
-    const events=await listEvents(client);
-    console.log(events);
-    res.render("index.ejs",{events:events,mode:mode});
+app.get('/', async (req, res) => {
+  let mode = 'online';
+  const client = await authorize();
+  const events = await listEvents(client);
+  console.log(events);
+  res.render("index.ejs", { events: events, mode: mode });
 })
 
 app.get('/problem', (req, res) => {
-    res.render("problem.ejs");
+  res.render("problem.ejs");
 })
 
 app.get('/blog', (req, res) => {
-    res.render("blog.ejs");
+  res.render("blog.ejs");
 })
 
 app.get('/history', (req, res) => {
-    res.render("history.ejs");
+  res.render("history.ejs");
 })
 
-app.get('/appointment',async(req,res)=>{
+app.get('/appointment', async (req, res) => {
 
-  let mode='online';
-  const client=await authorize();
-  const events=await listEvents(client);
+  let mode = 'online';
+  const client = await authorize();
+  const events = await listEvents(client);
   console.log(events);
-  res.render('schedule',{events:events,mode:mode}); 
+  res.render('schedule', { events: events, mode: mode });
 })
 
-app.get('/bookAppointment',(req,res)=>{
+app.get('/bookAppointment', (req, res) => {
   res.render('bookAppointment');
 })
 
-app.post('/bookAppointment',async (req,res)=>{
+app.post('/bookAppointment', async (req, res) => {
 
-  let summary=req.body.summary;
-  let location=req.body.location;
-  let description=req.body.description;
-  let startDateTime=req.body.startDateTime;
-  let endDateTime=req.body.endDateTime;
-  let timezone=req.body.timeZone;
-  let attendees=req.body.attendees;
-  const client=await authorize();
-  addEventDetails(summary,location,description,startDateTime,endDateTime,timezone,attendees,client)
+  let summary = req.body.summary;
+  let description = req.body.description;
+  let startDateTime = req.body.startDateTime;
+  addEventDetails(summary, description, startDateTime)
   res.redirect('/appointment');
 })
 
-// app.get('/:room', (req, res) => {
-//   res.render('room', { roomId: req.params.room });
-// });
+app.post('/problem', (req, res) => {
+  doctorsDetails.push(ProblemMap(req.body.search));
+  res.redirect('/doctorSuggestion');
+})
+
+app.post('/doctorSuggestion', (req, res) => {
+
+  res.render('doctorSuggestion', { doctorsDetails: doctorsDetails });
+
+})
 
 
-
-app.listen(PORT,()=>{
-    console.log(`Server is started at PORT ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server is started at PORT ${PORT}`);
 }) 

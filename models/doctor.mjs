@@ -1,20 +1,20 @@
 import mongoose from 'mongoose';
-const doctormodel = new mongoose.Schema({
-    Id:{
-        type : String,
-        required : true,
-        trim : true
-    },
-    name :{
-        type : String,
-        required : true,
-        trim : true
-    },
-    spciealization :{
-        type : String ,
-        required : true,
-        trim : true
-    }
+const doctorSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  education: {
+    type: String,
+
+  },
+  specialization: {
+    type: Array,
+    required: true,
+    trim: true
+  }
 });
-const  models = mongoose.model("Doctor",doctormodel);
-module.exports = models;
+const Doctor = mongoose.model("Doctor", doctorSchema);
+
+export default Doctor;

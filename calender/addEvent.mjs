@@ -1,42 +1,55 @@
-import { GoogleApis } from "googleapis";
+import { google } from 'googleapis'
+import fss from 'fs';
+import path from 'path';
+import process from 'process';
+import { time } from 'console';
+const fs = fss.promises;
+async function addEventDetails(summary,description,startDateTime,endDateTime) {
+    const TOKEN_PATH = path.join(process.cwd(), 'token.json');
+    const content = await fs.readFile(TOKEN_PATH);
+    const keys = JSON.parse(content);
+    // const key = keys.installed || keys.web;
 
-function addEventDetails(summary, location, description, startDateTime, endDateTime, timezone, attendees,client) {
+    const oauth2Client = new google.auth.OAuth2(keys.client_id, keys.client_secret);
+
+    oauth2Client.setCredentials({
+        // access_token: 'google access token',
+        refresh_token: keys.refresh_token,
+    });
+
+    const calendar = google.calendar({ version: "v3", oauth2Client });
+
+    const date=new Date();
+
+    const timeZone=Intl.DateTimeFormat().resolvedOptions().timeZone;;
     const event = {
-        'summary': summary,
-        'location': location,
-        'description': description,
-        'start': {
-            'dateTime': startDateTime,
-            'timeZone': timezone
+        summary: summary,
+        description: description,
+        start: {
+          dateTime: date('Y-m-d\TH:i:sO'),
+          timeZone: timeZone,
         },
-        'end': {
-            'dateTime': endDateTime,
-            'timeZone': timezone
+        end: {
+          dateTime: date('Y-m-d\TH:i:sO'),
+          timeZone: timeZone,
         },
-        
-        'attendees': attendees,
-        'reminders': {
-            'useDefault': true,
-            'overrides': [
-                { 'method': 'email', 'minutes': 24 * 60 },
-                { 'method': 'popup', 'minutes': 10 }
-            ]
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: "email", minutes: 24 * 60 },
+            { method: "popup", minutes: 30 },
+          ],
         },
-        'location':location
-    };
-    const request =GoogleApis.client.calendar.events.insert({
-        'calendarId': 'primary',
-        'resource': event
-    });   
-    request.execute(function (event) {
-        appendPre('Event created: ' + event.htmlLink);
-    }); 
+      };
+
+    // We make a request to Google Calendar API.
+    calendar.events.insert({
+        auth: oauth2Client,
+        calendarId: "primary",
+        resource: event,
+    })
+        .then((event) => console.log('Event created: %s', event.htmlLink))
+        .catch((error) => console.log('Some error occured', error));
+
 }
-
-
-
-
-export {addEventDetails};
-
-
 

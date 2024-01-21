@@ -1,0 +1,21 @@
+<%- include("./partials/frameUpper") %>
+    <div class="bookApp utility">
+        <div class="formm">
+            <form action="/bookAppointment" method="POST">
+                <div class="inputs">
+                <input type="text" id="fname" name="fname" placeholder="Name" autocomplete="off" required/><br>
+                <input type="text" name="summary" id="" placeholder="What's Your problem" required /><br>
+                <select name="description" id="" placeholder="Mode" required>
+                    <option value="online">Online</option>
+                    <option value="offline">Offline</option>
+                </select>
+                <br>
+
+                <input type="text" name="startDateTime" id="" placeholder="Appointment Time" required /><br>
+                <!-- <input type="text" name="" id="" placeholder="Name" required /><br> -->
+                </div>
+                <button type="submit">Book</button>
+            </form>
+        </div>
+    </div>
+<%- include("./partials/frameLower") %>

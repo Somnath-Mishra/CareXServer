@@ -89,23 +89,17 @@ async function listEvents(auth) {
   // });
 }
 
-function addEventDetails(summary, location, description, startDateTime, endDateTime, timezone, attendees,client) {
+function addEventDetails(summary, description, startDateTime,client) {
   const auth=authorize();
+  
   const calendar = google.calendar({ version: 'v3', auth });
   const event = {
       'summary': summary,
-      'location': location,
+      
       'description': description,
       'start': {
           'dateTime': startDateTime,
-          'timeZone': timezone
       },
-      'end': {
-          'dateTime': endDateTime,
-          'timeZone': timezone
-      },
-      
-      'attendees': attendees,
       'reminders': {
           'useDefault': true,
           'overrides': [
