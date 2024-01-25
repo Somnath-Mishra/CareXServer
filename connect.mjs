@@ -1,7 +1,9 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-async function connectToMongoDB(url){
-    return mongoose.connect(url);
+const mongodbURL = "mongodb://127.0.0.1:27017/CareXDB"
+
+async function connectMongoDB() {
+  await mongoose.connect(mongodbURL)
 }
 
-export {connectToMongoDB};
+export { connectMongoDB };

@@ -1,10 +1,10 @@
 import mongoose from "mongoose"
 const problemSchema = new mongoose.Schema({
-  problem: string,
+  problem: String,
   requiredSpecilization: Array
 
 })
 
 const Problem = mongoose.model("Problems", problemSchema);
 
-export default Problem;
+export { Problem };
