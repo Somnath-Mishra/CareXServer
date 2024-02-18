@@ -34,7 +34,7 @@ console.log('Authorize this app by visiting this URL:', url);
 // Assuming you retrieve the authorization code from the redirect URL
 // Once the user grants permissions, Google will redirect to your redirect URL with a code parameter
 // Extract the code from the URL and use it in the next step
-let code="4/0AfJohXmJclb6RxlG-DJ9n-W6h-BO4D4lmm_xBjjc-KQVTbKtt9oi7S0NRAoSKhH4EjosLQ";
+
 
 
 // const setAuthorizeCode=((authorizeCode)=>{
