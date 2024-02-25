@@ -35,6 +35,7 @@ const authUrl = oAuth2Client.generateAuthUrl({
   scope: SCOPES,
 });
 
+
 async function getAccessTokenAndSetCredentials() {
   try {
 
@@ -49,7 +50,8 @@ async function getAccessTokenAndSetCredentials() {
     // Save the refresh token to token.json
     if (tokens.refresh_token) {
       await fs.writeFile(TOKEN_PATH, tokens.refresh_token);
-    }
+
+
 
     console.log('Access token:', tokens.access_token);
     console.log('Refresh token:', tokens.refresh_token);
