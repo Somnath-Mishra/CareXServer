@@ -3,6 +3,10 @@ import * as fs from 'fs/promises';
 import path from 'path';
 import process from 'process';
 import { auth } from 'google-auth-library';
+import { addMinutesToTime, getCurrentTimeZone, convertToISOStringWithOffset } from './dateFormate.mjs'
+import { authorize } from "./listEvent.mjs"
+import { authenticate } from '@google-cloud/local-auth';
+import dotenv from 'dotenv';
 
 const TOKEN_PATH = path.join(process.cwd(), 'token.json');
 const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
@@ -11,52 +15,50 @@ const keys = JSON.parse(content);
 
 // Assuming 'web' is the appropriate property for your credentials JSON
 const webCredentials = keys.web || keys.installed;
+const API_KEY = process.env.API_KEY;
 const CLIENT_ID = webCredentials.client_id;
 const CLIENT_SECRET = webCredentials.client_secret;
 const REDIRECT_URL = webCredentials.redirect_uris[0]; // Assuming redirect_uris is an array
+const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
+const SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
 
-const SCOPES = ['https://www.googleapis.com/auth/calendar'];
-
-const oauth2Client = new google.auth.OAuth2(
+const oAuth2Client = new google.auth.OAuth2(
   CLIENT_ID,
   CLIENT_SECRET,
-  REDIRECT_URL
+  REDIRECT_URL,
+  REFRESH_TOKEN,
+  API_KEY,
 );
 
-const url = oauth2Client.generateAuthUrl({
+const authUrl = oAuth2Client.generateAuthUrl({
   access_type: 'offline',
   scope: SCOPES,
 });
 
-// The authorization URL to redirect the user to
-console.log('Authorize this app by visiting this URL:', url);
 
-// Assuming you retrieve the authorization code from the redirect URL
-// Once the user grants permissions, Google will redirect to your redirect URL with a code parameter
-// Extract the code from the URL and use it in the next step
+async function getAccessTokenAndSetCredentials() {
+  try {
+
+    // Assuming you have the authorization code stored in a variable 'code'
+    const { tokens } = await oAuth2Client.getToken(code);
+    oAuth2Client.setCredentials({
+      refresh_token: tokens.refresh_token,
+      access_token: tokens.access_token,
+      api_key: API_KEY
+    });
+
+    // Save the refresh token to token.json
+    if (tokens.refresh_token) {
+      await fs.writeFile(TOKEN_PATH, tokens.refresh_token);
 
 
 
-// const setAuthorizeCode=((authorizeCode)=>{
-//   code=authorizeCode;
-
-// }).then(()=>{
-  async function getAccessTokenAndSetCredentials() {
-    try {
-      const { tokens } = await oauth2Client.getToken(code);
-      oauth2Client.setCredentials(tokens);
-  
-      // Save the refresh token to token.json
-      if (tokens.refresh_token) {
-        await fs.writeFile(TOKEN_PATH, tokens.refresh_token);
-      }
-  
-      console.log('Access token:', tokens.access_token);
-      console.log('Refresh token:', tokens.refresh_token);
-    } catch (error) {
-      console.error('Error getting access token:', error.message);
-    }
-  }    
+    console.log('Access token:', tokens.access_token);
+    console.log('Refresh token:', tokens.refresh_token);
+  } catch (error) {
+    console.error('Error getting access token:', error.message);
+  }
+}
 // })
 
 
@@ -64,23 +66,39 @@ console.log('Authorize this app by visiting this URL:', url);
 // Uncomment the following line when you have the authorization code
 // getAccessTokenAndSetCredentials();
 
-async function addEventDetails(summary, description, startDateTime) {
+const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
+async function addEventDetails(summary, description, startDate, startTime, oAuth2Client) {
   try {
     // Uncomment the following line when you have the access token
-    await getAccessTokenAndSetCredentials();
+    //await getAccessTokenAndSetCredentials();
+    oAuth2Client.setCredentials({
+      refresh_token: process.env.refresh_token,
+    })
+    const calendar = google.calendar({ version: 'v3', client: oAuth2Client });
 
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    if (!startDate || !startTime) {
+      throw new Error("Missing required input: startDate or startTime");
+    }
+
+    const startDateTime = "2024-02-26T09:00:00+05:30" || convertToISOStringWithOffset(startDate.toString(), startTime.toString());
+    const endDateTime = "2024-02-26T17:00:00+05:30" || addMinutesToTime(startTime, 30);
+
+    const currentTimeZone = getCurrentTimeZone();
+
+    console.log(startTime);
+    console.log(startDate);
+    console.log(currentTimeZone);
 
     const event = {
       summary: summary,
       description: description,
       start: {
-        dateTime: new Date(startDateTime).toISOString(),
-        timeZone: 'UTC', // Set your desired time zone or remove this line for default
+        dateTime: startDateTime,
+        timeZone: currentTimeZone,
       },
       end: {
-        dateTime: new Date(startDateTime).toISOString(),
-        timeZone: 'UTC', // Set your desired time zone or remove this line for default
+        dateTime: endDateTime,
+        timeZone: currentTimeZone,
       },
       reminders: {
         useDefault: false,
@@ -93,13 +111,14 @@ async function addEventDetails(summary, description, startDateTime) {
 
     const response = await calendar.events.insert({
       calendarId: 'primary',
-      resource: event,
+      auth: oAuth2Client,
+      requestBody: event,
     });
 
-    console.log('Event created: %s', response.data.htmlLink);
+    console.log('Event created: %s', response?.data);
   } catch (error) {
     console.log('Some error occurred', error.message);
   }
 }
 
-export { addEventDetails };
+export { addEventDetails, authUrl, oAuth2Client };

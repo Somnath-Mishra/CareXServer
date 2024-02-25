@@ -9,10 +9,12 @@
                     <option value="online">Online</option>
                     <option value="offline">Offline</option>
                 </select>
+                
                 <br>
-
-                <input type="text" name="startDateTime" id="" placeholder="Appointment Time" required /><br>
-                <!-- <input type="text" name="" id="" placeholder="Name" required /><br> -->
+                <label for="start">Start date:</label>
+                <input type="date" id="start" name="startDate" value="2018-07-22" min="2024-01-01" max="2050-12-31" />
+                <label for="timeInput">Enter Time:</label>
+                <input type="time" id="timeInput" name="startTime" min="00:00" max="23:59" step="1" required>
                 </div>
                 <button type="submit">Book</button>
             </form>

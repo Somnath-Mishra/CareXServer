@@ -1,0 +1,11 @@
+
+
+<div >
+<% doctorsDetails[0].forEach(doctor=>{%>
+    <h2><%= doctor.name %></h2>
+    <h2><%= doctor.education %></h2>
+    <% doctor.specialization.forEach(spec=>{ %>
+        <h3> <%= spec %> </h3>
+      <%})%>
+ <% })%>
+</div>

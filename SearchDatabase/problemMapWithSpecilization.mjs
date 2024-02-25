@@ -18,19 +18,35 @@ async function ProblemMap(disease) {
   }
 }
 
+async function findDoctors(specialization) {
+  console.log("Inside findDoctors(): " + specialization)
+  let requiredSpecializations = specialization.split(",");
+
+  let doctorArray = [];
+  for (let spec of requiredSpecializations) {
+    let details = await findDoctorDetails(spec);
+    if (details.length > 0) // Check if details are found
+      doctorArray.push(details);
+  }
+  console.log("findDoctors(): doctorArray : " + doctorArray);
+  let doctorsInfo = await uniqueDoctorsList(doctorArray);
+  return doctorsInfo;
+}
+
 
 async function findDoctorDetails(specialization) {
   let doctorsDetails = await Doctor.find({ specialization: specialization });
-  console.log(doctorsDetails)
+  console.log("findDoctorDetails(): " + doctorsDetails);
   return doctorsDetails;
-
 }
 
 
 async function uniqueDoctorsList(doctorsDetails) {
   const uniqueDoctorsSet = new Set(doctorsDetails.map(JSON.stringify));
+  console.log("uniqueDoctorsList(): uniqueDoctorsSet:  " + uniqueDoctorsSet);
   const uniqueDoctorsArray = Array.from(uniqueDoctorsSet).map(JSON.parse);
+  console.log("uniqueDoctorsArray: " + uniqueDoctorsArray);
   return uniqueDoctorsArray;
 }
 
-export { ProblemMap } 
+export { ProblemMap, findDoctors } 
