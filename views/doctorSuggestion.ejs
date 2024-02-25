@@ -1,46 +1,32 @@
 
+
 <%- include("./partials/frameUpper.ejs") %>
 
     <div class="suggestion utility">
         <div class="contain">
             <h1>Curated Doctors for your Diagnosis as per<br>your problems</h1>
-            <div class="docTemplate">
-                <div class="profile">
-                    <img src="/boy.png" alt="">
-                    <div class="key">
-                        <h2>name <%= locals.name %></h2>
-                        <h3>Qualification <%= locals.Qualification %></h3>
-                    </div>
-                </div>
-                <div class="lowerportion">
-                    <button>Book Appointment</button>
-                    <div class="specialization">
-                        <h2> <%= locals.s1 %></h2>
-                        <h2>| <%= locals.s1 %></h2>
-                        <h2>| <%= locals.s1 %></h2>
-                    </div>
-                </div>
-            </div>
 
-            <div class="docTemplate">
-                <div class="profile">
-                    <img src="/boy.png" alt="">
-                    <div class="key">
-                        <h2>name <%= locals.name %></h2>
-                        <h3>Qualification <%= locals.Qualification %></h3>
+            <% doctorsDetails[0].forEach(doctor=>{%>
+                <div class="docTemplate">
+                    <div class="profile">
+                        <img src="/boy.png" alt="">
+                        <div class="key">
+                            <h2><%= locals.doctor.name %></h2>
+                            <h3><%= locals.doctor.education %></h3>
+                        </div>
+                    </div>
+                    <div class="lowerportion">
+                        <button>Book Appointment</button>
+                        <div class="specialization">
+                            <% doctor.specialization.forEach(spec=>{ %>
+                                <h2> <%= locals.spec %> </h2>
+                            <%})%>
+                        </div>
                     </div>
                 </div>
-                <div class="lowerportion">
-                    <button>Book Appointment</button>
-                    <div class="specialization">
-                        <h2><%= locals.s1 %></h2>
-                        <h2>| <%= locals.s1 %></h2>
-                        <h2>| <%= locals.s1 %></h2>
-                    </div>
-                </div>
-            </div>
+            <% })%>
+
         </div>
-
     </div>
 
 
