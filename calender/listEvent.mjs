@@ -6,7 +6,7 @@ import { google } from 'googleapis'
 
 const fs = fss.promises;
 
-const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+const SCOPES = ['https://www.googleapis.com/auth/calendar.events.readonly'];
 
 const TOKEN_PATH = path.join(process.cwd(), 'token.json');
 const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
@@ -81,55 +81,12 @@ async function listEvents(auth) {
     console.log('No upcoming events found.');
     return;
   }
-  // console.log('Upcoming 10 events:');
   return events;
-  // events.map((event, i) => {
-  //   const start = event.start.dateTime || event.start.date;
-  //   console.log(`${start} - ${event.summary}`);
-  // });
 }
 
-function addEventDetails(summary, description, startDateTime) {
-  const auth = authorize();
 
-  const calendar = google.calendar({ version: 'v3', auth });
-  const event = {
-    'summary': summary,
-    'location': '800 Howard St., San Francisco, CA 94103',
-    'description': description,
-    'start': {
-      'dateTime': startDateTime,
-      'timeZone': 'Asia/Kolkata'
-    },
-    'end': {
-      'dateTime': startDateTime,
-      'timeZone': 'Asia/Kolkata'
-    },
-    'recurrence': [
-      'RRULE:FREQ=DAILY;COUNT=2'
-    ],
-    'attendees': [
-      { 'email': 'lpage@example.com' },
-      { 'email': 'sbrin@example.com' }
-    ],
-    'reminders': {
-      'useDefault': false,
-      'overrides': [
-        { 'method': 'email', 'minutes': 24 * 60 },
-        { 'method': 'popup', 'minutes': 10 }
-      ]
-    }
-  }; const request = calendar.events.insert({
-    'calendarId': 'primary',
-    'resource': event
-  });
-  request.execute(function(event) {
-    appendPre('Event created: ' + event.htmlLink);
-  });
-}
 
-export { listEvents, authorize, addEventDetails }
+export { listEvents, authorize }
 
-// authorize().then(listEvents).catch(console.error);
 
 
