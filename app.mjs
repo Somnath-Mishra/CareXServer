@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config()
 import express from 'express';
 import path, { win32 } from 'path';
 import bodyParser from 'body-parser';
@@ -7,9 +9,10 @@ import { connectMongoDB } from "./connect.mjs"
 import mongoose from 'mongoose';
 import { addEventDetails, authUrl, oAuth2Client } from "./calender/addEvent.mjs"
 import { OAuth2Client } from 'google-auth-library';
-import dotenv from 'dotenv';
 import { findSpecifications } from './GenAI/patientProblemWithSpeciliazation.mjs'
 import { Doctor } from './models/doctor.mjs';
+import Stripe from 'stripe'
+
 
 const app = express();
 const authApp = express();
@@ -22,6 +25,10 @@ app.set('views', path.resolve("./views"));
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+const stripeSecretKey = process.env.STRIPE_SECRET_API_KEY;
+const stripePublicKey = process.env.STRIPE_PUBLIC_API_KEY;
+const stripe = new Stripe(stripeSecretKey);
 
 let doctorsDetails;
 const medicalSpecializations = [
@@ -116,7 +123,7 @@ app.post('/problem', async (req, res) => {
 
 app.get('/doctorSuggestion', (req, res) => {
   //res.send(doctorsDetails);
-  res.render('doctorSuggestion.ejs', { doctorsDetails: doctorsDetails });
+  res.render('doctorSuggestion.ejs', { stripePublicKey: stripePublicKey, doctorsDetails: doctorsDetails });
 
 })
 
@@ -137,71 +144,123 @@ app.post('/bookAppointment', async (req, res) => {
   res.redirect('/');
 })
 
+
+app.post('/confirmBook', async (req, res) => {
+  const doctorId = req.body.doctorId;
+
+  try {
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    console.log(doctor);
+    const fees = doctor.fees;
+
+    stripe.charges.create({
+      amount: fees * 100,
+      source: req.body.stripeTokenId,
+      currency: 'usd'
+    }).then(function() {
+      console.log('Charge Successful');
+      res.json({ message: 'Successfully Booked' })
+    }).catch(function() {
+      console.log('Charge Fail');
+      res.status(500).json({ message: 'Failed to process payment' });
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 // app.get('/:room', (req, res) => {
 //   res.render('room', { roomId: req.params.room });
 // });
-app.get('/test', (req, res) => {
+app.get('/test', async (req, res) => {
 
-
-  // Define the medical specializations
-  const medicalSpecializations = [
-    "Anesthesiology",
-    "Cardiology",
-    "Dermatology",
-    "Emergency Medicine",
-    "Endocrinology",
-    "Family Medicine",
-    "Gastroenterology",
-    "General Surgery",
-    "Hematology",
-    "Infectious Disease",
-    "Internal Medicine",
-    "Nephrology",
-    "Neurology",
-    "Obstetrics and Gynecology (OB/GYN)",
-    "Oncology",
-    "Ophthalmology",
-    "Orthopedic Surgery",
-    "Otolaryngology (ENT)",
-    "Pediatrics",
-    "Physical Medicine and Rehabilitation",
-    "Plastic Surgery",
-    "Psychiatry",
-    "Pulmonology",
-    "Radiology",
-    "Rheumatology",
-    "Urology"
-  ];
-
-  // Function to generate a random specialization from the given list
-  function getRandomSpecialization() {
-    return medicalSpecializations[Math.floor(Math.random() * medicalSpecializations.length)];
-  }
-
-  // Generate 40 dummy doctor objects
-  const dummyDoctors = [];
-  for (let i = 1; i <= 40; i++) {
-    const dummyDoctor = {
-      name: `Doctor ${i}`,
-      education: `Medical School Name ${i}`,
-      specialization: [getRandomSpecialization()]
-    };
-    dummyDoctors.push(dummyDoctor);
-  }
-
-  // Now you can use dummyDoctors array as per your requirement, for example, save them to MongoDB
-  // Assuming Doctor model is defined using doctorSchema
-  dummyDoctors.forEach(async (doctorData) => {
-    const doctor = new Doctor(doctorData);
-    try {
-      await doctor.save();
-      console.log(`Doctor ${doctor.name} saved successfully.`);
-    } catch (error) {
-      console.error(`Error saving Doctor ${doctor.name}:`, error);
+  /*
+    // Define the medical specializations
+    const medicalSpecializations = [
+      "Anesthesiology",
+      "Cardiology",
+      "Dermatology",
+      "Emergency Medicine",
+      "Endocrinology",
+      "Family Medicine",
+      "Gastroenterology",
+      "General Surgery",
+      "Hematology",
+      "Infectious Disease",
+      "Internal Medicine",
+      "Nephrology",
+      "Neurology",
+      "Obstetrics and Gynecology (OB/GYN)",
+      "Oncology",
+      "Ophthalmology",
+      "Orthopedic Surgery",
+      "Otolaryngology (ENT)",
+      "Pediatrics",
+      "Physical Medicine and Rehabilitation",
+      "Plastic Surgery",
+      "Psychiatry",
+      "Pulmonology",
+      "Radiology",
+      "Rheumatology",
+      "Urology"
+    ];
+  
+    // Function to generate a random specialization from the given list
+    function getRandomSpecialization() {
+      return medicalSpecializations[Math.floor(Math.random() * medicalSpecializations.length)];
     }
-  });
+  
+    // Generate 40 dummy doctor objects
+    const dummyDoctors = [];
+    for (let i = 1; i <= 40; i++) {
+      const dummyDoctor = {
+        name: `Doctor ${i}`,
+        education: `Medical School Name ${i}`,
+        specialization: [getRandomSpecialization()]
+      };
+      dummyDoctors.push(dummyDoctor);
+    }
+  
+    // Now you can use dummyDoctors array as per your requirement, for example, save them to MongoDB
+    // Assuming Doctor model is defined using doctorSchema
+    dummyDoctors.forEach(async (doctorData) => {
+      const doctor = new Doctor(doctorData);
+      try {
+        await doctor.save();
+        console.log(`Doctor ${doctor.name} saved successfully.`);
+      } catch (error) {
+        console.error(`Error saving Doctor ${doctor.name}:`, error);
+      }
+    });
+    */
+  // Function to generate a random fee between $50 and $100
+  function getRandomFees() {
+    return Math.floor(Math.random() * (100 - 50 + 1)) + 50;
+  }
+  // Retrieve all documents from the collection
+  const doctors = await Doctor.find();
+
+  // Update each document to add the fees field with a random value
+  for (const doctor of doctors) {
+    // Check if the fees field already exists to prevent overriding existing fees
+    if (!doctor.fees) {
+      doctor.fees = getRandomFees();
+      await doctor.save();
+      console.log(`Fees added to Doctor ${doctor.name}: $${doctor.fees}`);
+    } else {
+      console.log(`Fees already exist for Doctor ${doctor.name}`);
+    }
+  }
+
+  console.log('All doctors updated successfully.');
   res.send({
-    msg: "Successfully added doctor details"
+    msg: "Successfully added doctor fees details"
   })
 })
 

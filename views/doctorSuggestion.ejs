@@ -1,25 +1,24 @@
 
 
-<%- include("./partials/frameUpper.ejs") %>
-
-    <div class="suggestion utility">
+<%- include("./partials/frameUpper.ejs") %>    <div class="suggestion utility">
         <div class="contain">
             <h1>Curated Doctors for your Diagnosis as per<br>your problems</h1>
 
             <% doctorsDetails[0].forEach(doctor=>{%>
-                <div class="docTemplate">
+                <div class="docTemplate" doctor-id="<%= doctor._id %>">
                     <div class="profile">
                         <img src="/boy.png" alt="">
                         <div class="key">
-                            <h2><%= locals.doctor.name %></h2>
-                            <h3><%= locals.doctor.education %></h3>
+                            <h2><%= doctor.name %></h2>
+                            <h3><%= doctor.education %></h3>
+                            <h3>Fees : $<%=doctor.fees %> </h3>
                         </div>
                     </div>
                     <div class="lowerportion">
-                        <button>Book Appointment</button>
+                        <button  onclick="bookAppointment('<%=doctor._id%>', <%=doctor.fees%>)">Book Appointment</button>
                         <div class="specialization">
                             <% doctor.specialization.forEach(spec=>{ %>
-                                <h2> <%= locals.spec %> </h2>
+                                <h2> <%= spec %> </h2>
                             <%})%>
                         </div>
                     </div>
