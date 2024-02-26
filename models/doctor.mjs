@@ -13,6 +13,10 @@ const doctorSchema = new mongoose.Schema({
     type: Array,
     required: true,
     trim: true
+  },
+  fees: {
+    type: Number,
+    required: true
   }
 });
 const Doctor = mongoose.model("Doctor", doctorSchema);
