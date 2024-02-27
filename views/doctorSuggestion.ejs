@@ -15,7 +15,7 @@
                         </div>
                     </div>
                     <div class="lowerportion">
-                        <button  onclick="bookAppointment('<%=doctor._id%>', <%=doctor.fees%>)">Book Appointment</button>
+                        <button  onclick="payWithRajorPay('<%=doctor._id%>', <%=doctor.fees%>)">Book Appointment</button>
                         <div class="specialization">
                             <% doctor.specialization.forEach(spec=>{ %>
                                 <h2> <%= spec %> </h2>

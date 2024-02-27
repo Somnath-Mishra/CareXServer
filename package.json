@@ -20,6 +20,7 @@
     "google-auth-library": "^9.4.2",
     "googleapis": "^105.0.0",
     "mongoose": "^8.1.0",
+    "razorpay": "^2.9.2",
     "stripe": "^14.18.0"
   },
   "devDependencies": {
