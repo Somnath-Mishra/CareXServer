@@ -12,8 +12,8 @@ import { OAuth2Client } from 'google-auth-library';
 import { findSpecifications } from './GenAI/patientProblemWithSpeciliazation.mjs'
 import { Doctor } from './models/doctor.mjs';
 import Stripe from 'stripe'
-
-
+//import { validateWebhookSignature, validatePaymentVerification } from 'razorpay'
+import Razorpay from 'razorpay'
 const app = express();
 const authApp = express();
 
@@ -29,6 +29,17 @@ app.use(bodyParser.json());
 const stripeSecretKey = process.env.STRIPE_SECRET_API_KEY;
 const stripePublicKey = process.env.STRIPE_PUBLIC_API_KEY;
 const stripe = new Stripe(stripeSecretKey);
+
+const rajorPaySecret = process.env.RAZORPAY_KEY_SECRET
+const rajorPayKeyId = process.env.RAZORPAY_KEY_ID
+
+
+let rajorPayInstance = new Razorpay({
+  key_id: rajorPayKeyId,
+  key_secret: rajorPaySecret
+})
+
+let orderId;
 
 let doctorsDetails;
 const medicalSpecializations = [
@@ -175,6 +186,46 @@ app.post('/confirmBook', async (req, res) => {
 });
 
 
+
+app.post('/payment', async (req, res) => {
+  let { amount } = req.body;
+  /*
+  let rajorPayInstance = new Razorpay({
+    key_id: process.env.rajorPayKeyId,
+    key_secret: process.env.rajorPaySecret
+  })
+    */
+  let order = await rajorPayInstance.orders.create({
+    amount: amount * 100,
+    currency: "INR",
+    receipt: "receipt#1"
+  })
+  orderId = order.id;
+  res.status(201).json({
+    success: true,
+    order,
+    amount
+  })
+})
+
+app.post('/', (req, res) => {
+  let { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+  const generated_signature = hmac_sha256(orderId + "|" + razorpay_payment_id, rajorPaySecret);
+  if (generated_signature == razorpay_signature) {
+    console.log("Payment is successful");
+  }
+})
+
+/*
+app.post("api/payment/verify", (req, res) => {
+
+  const generated_signature = hmac_sha256(req.body.razorpay_order_id + "|" + req.body.razorpay_payment_id, rajorPaySecret);
+
+  if (generated_signature == req.body.razorpay_signature) {
+    console.log("Payment successfully");
+  }
+})
+*/
 // app.get('/:room', (req, res) => {
 //   res.render('room', { roomId: req.params.room });
 // });
