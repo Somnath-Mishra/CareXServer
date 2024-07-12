@@ -25,8 +25,15 @@ app.use(cookieParser());
 
 // Routes import
 import userRouter from './routes/user.routes.js';
+import appointmentRouter from './routes/appointment.routes.js';
+import paymentRouter from './routes/payment.routes.js';
+import scheduleRouter from './routes/schedule.routes.js'
 
 // Routes declaration
 app.use('/api/v1/user', userRouter);
+app.use('/api/v1/appointment',appointmentRouter);
+app.use("/api/v1/payment",paymentRouter);
+app.use("/api/v1/schedule",scheduleRouter);
+
 
 export { app };

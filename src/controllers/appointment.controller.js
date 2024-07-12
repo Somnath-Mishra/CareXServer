@@ -5,9 +5,8 @@ import { googleCalendar } from "../utils/googleCalendar.js"
 import { Schedule } from "../models/schedule.model.js";
 import { Payment } from "../models/payment.model.js";
 import { Appointment } from "../models/appointment.model.js";
-import { Doctor } from "../models/doctor.mjs";
+import { Doctor } from "../models/doctor.model.js";
 import { User } from "../models/user.model.js";
-import { Appointment } from "../models/appointment.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 export const markAppointmentAtCalender = async (summary,

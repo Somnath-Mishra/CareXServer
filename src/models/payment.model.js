@@ -30,11 +30,11 @@ const paymentSchema=Schema({
     },
     paymentReferrence:{
         type:String,
+        enum:["RazorPay","Stripe"],
         required:true
     },
     invoice:{
         type:String,//this is pdf and store only cloudinary link
-        required:true
     }
 })
 

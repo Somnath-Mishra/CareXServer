@@ -1,8 +1,8 @@
-import { Doctor } from "../models/doctor.mjs";
-import { Schedule } from "../models/schedule.model";
-import { ApiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
-import { asyncHandler } from "../utils/asyncHandler";
+import { Doctor } from "../models/doctor.model.js";
+import { Schedule } from "../models/schedule.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const createSchedule = asyncHandler(async (req, res) => {
     const { startTime, endTime, mode, location } = req.body;
@@ -22,6 +22,9 @@ export const createSchedule = asyncHandler(async (req, res) => {
     if (!doctor) {
         throw new ApiError(404, "Doctor not found");
     }
+    if (doctor.role?.trim() !== "doctor") {
+        throw new ApiError(403, "You are not authorized to create schedule for this doctor");
+    }
     const schedule = await Schedule.create({
         startTime, endTime, mode, location, doctorId
     })
@@ -40,10 +43,19 @@ export const updateSchedule = asyncHandler(async (req, res) => {
     if (!scheduleId || !startTime || !endTime) {
         throw new ApiError(400, "Schedule id, start and end time required for updating schedule")
     }
+
+    const startDateTime = new Date(startTime);
+    const endDateTime = new Date(endTime);
     const schedule = await Schedule.findById(scheduleId);
     const doctorId = req.user?._id;
-    const doctor = Doctor.findById(doctorId).select("-password -refreshToken");
-    if (doctor._id !== schedule.doctorId) {
+    const doctor = await Doctor.findById(doctorId).select("-password -refreshToken");
+    if (!doctor) {
+        throw new ApiError(404, "Doctor not found");
+    }
+    if (!doctor._id.equals(schedule.doctorId)) {
+        throw new ApiError(403, "You are not authorized to update this schedule");
+    }
+    if (doctor.role.trim() !== "doctor") {
         throw new ApiError(403, "You are not authorized to update this schedule");
     }
 
@@ -57,7 +69,7 @@ export const updateSchedule = asyncHandler(async (req, res) => {
     }
 
     const updatedSchedule = await Schedule.findByIdAndUpdate(scheduleId, {
-        startTime, endTime, mode, location
+        startDateTime, endDateTime, mode, location
     }, { new: true })
 
     if (!updateSchedule) {
@@ -76,10 +88,18 @@ export const deleteSchedule = asyncHandler(async (req, res) => {
     }
     const schedule = await Schedule.findById(scheduleId);
     const doctorId = req.user?._id;
-    const doctor = Doctor.findById(doctorId).select("-password -refreshToken");
-    if (doctor._id !== schedule.doctorId) {
-        throw new ApiError(403, "You are not authorized to delete this schedule");
+    const doctor = await Doctor.findById(doctorId).select("-password -refreshToken");
+
+    if (!doctor) {
+        throw new ApiError(404, "Doctor not found");
     }
+    if (!doctor._id.equals(schedule.doctorId)) {
+        throw new ApiError(403, "You are not authorized to update this schedule");
+    }
+    if (doctor.role.trim() !== "doctor") {
+        throw new ApiError(403, "You are not authorized to update this schedule");
+    }
+
     await Schedule.findByIdAndDelete(scheduleId);
     res
         .status(200)
@@ -89,8 +109,16 @@ export const deleteSchedule = asyncHandler(async (req, res) => {
 })
 
 export const getScheduleDetails = asyncHandler(async (req, res) => {
-    const doctoId = req.user?._id;
+    const doctorId = req.user?._id;
     const doctor = await Doctor.findById(doctorId).select("-password -refreshToken");
+
+    if (!doctor) {
+        throw new ApiError(404, "Doctor not found");
+    }
+    if (doctor.role.trim() !== "doctor") {
+        throw new ApiError(403, "You are not authorized to get schedule details");
+    }
+
     const scheduleDetails = await Schedule.aggregate([
         {
             $match: {

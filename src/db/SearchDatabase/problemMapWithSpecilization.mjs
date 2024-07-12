@@ -1,4 +1,4 @@
-import { Doctor } from "../../models/doctor.mjs";
+import { Doctor } from "../../models/doctor.model.js";
 import { Problem } from "../../models/problems.mjs";
 
 async function ProblemMap(disease) {

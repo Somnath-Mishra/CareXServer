@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { verifyJWT } from "../middlewares/auth.middleware";
-import { createSchedule, deleteSchedule, getScheduleDetails, updateSchedule } from "../controllers/schedule.controller";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { createSchedule, deleteSchedule, getScheduleDetails, updateSchedule } from "../controllers/schedule.controller.js";
 
 const router=Router();
 router.use(verifyJWT);

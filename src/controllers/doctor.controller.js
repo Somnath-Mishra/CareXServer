@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler";
 
 export const uploadDoctorSpecificDetails=asyncHandler(async(req, res)=>{
-
+    
 })
 
 export const uploadPrescription=asyncHandler(async(req,res)=>{
