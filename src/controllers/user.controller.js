@@ -41,65 +41,19 @@ export const findDoctor = asyncHandler(async (req, res) => {
     }
 
     res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            doctors,
-            "Doctor fetched successfully",
-        )
-    );
-})
-
-
-
-export const markAppointmentAtCalender = asyncHandler(async (req, res) => {
-    const {
-        summary,
-        description,
-        year,
-        month,
-        day,
-        hour,
-        minute,
-        second,
-        timeZone,
-        country,
-        patientUserName,
-        doctorUserName
-    } = req.body;
-
-    if (!summary || !description || !year || !month || !day || !hour || !minute || !second || !timeZone || !country || !patientUserName || !doctorUserName) {
-        throw new ApiError(400, "Missing required fields");
-    }
-
-    const data = await googleCalendar.bookAnAppointmentInCalendar(
-        summary,
-        description,
-        year,
-        month,
-        day,
-        hour,
-        minute,
-        second,
-        timeZone,
-        country,
-        patientUserName,
-        doctorUserName
-    );
-    if (!data) {
-        throw new ApiError(500, "Something went wrong while inserting event in google calendar");
-    }
-    return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                data,
-                "Appointment booked successfully",
+                doctors,
+                "Doctor fetched successfully",
             )
         );
 })
+
+
+
+
 
 // export async function confirmBookByStripe(req, res) {
 //     const { doctorId, stripeTokenId } = req.body;
@@ -245,8 +199,8 @@ export const registerUser = asyncHandler(async (req, res) => {
 export const generateAccessAndRefreshToken = async (userId) => {
     try {
         const user = await User.findById(userId);
-        const accessToken = user.generateAccessToken();
-        const refreshToken = user.generateRefreshToken();
+        const accessToken = await user.generateAccessToken();
+        const refreshToken =await user.generateRefreshToken();
 
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
@@ -293,11 +247,13 @@ export const loginUser = asyncHandler(async (req, res) => {
         .status(200)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
-        .json(new ApiResponse(200, {
-            user: loggedInUser,
-            accessToken,
-            refreshToken
-        }, "User logged in successfully"));
+        .json(new ApiResponse(
+            200,
+            {
+                user: loggedInUser,
+                accessToken,
+                refreshToken
+            }, "User logged in successfully"));
 
 })
 
@@ -359,7 +315,8 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 
 export const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword, confirmPassword } = req.body;
-    const user = req.user;
+    const userId = req.user?._id;
+    const user=await User.findById(userId);
     if (!oldPassword || !newPassword || !confirmPassword) {
         throw new ApiError(400, "All password fields are required");
     }
@@ -389,7 +346,7 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
     if (!firstName || !lastName || !address || !email || !phoneNumber) {
         throw new ApiError(400, "All fields are required");
     }
-    const user = User.findByIdAndUpdate(
+    const user =await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
@@ -473,14 +430,14 @@ export const updateCoverImage = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, user, "Cover image updated successfully"));
 })
 
-export const makePaymentByRazorPay=asyncHandler(async(req,res)=>{
-    const {amount}=req.body;
-    if(!amount){
+export const makePaymentByRazorPay = asyncHandler(async (req, res) => {
+    const { amount } = req.body;
+    if (!amount) {
         throw new ApiError(400, "Amount is required");
     }
 
-    const orderPayload=razorPayClient.createOrder(amount);
-    if(!orderPayload){
+    const orderPayload = razorPayClient.createOrder(amount);
+    if (!orderPayload) {
         throw new ApiError(500, "Something went wrong while creating order through Razor Pay");
     }
     return res
@@ -488,13 +445,13 @@ export const makePaymentByRazorPay=asyncHandler(async(req,res)=>{
         .json(new ApiResponse(200, orderPayload, "Order created successfully by Razor Pay"));
 })
 
-export const verifyPaymentByRazorPay=asyncHandler(async(req, res)=>{
-    const {razorpay_payment_id,razorpay_signature}=req.body;
-    if(!razorpay_payment_id || !razorpay_signature){
+export const verifyPaymentByRazorPay = asyncHandler(async (req, res) => {
+    const { razorpay_payment_id, razorpay_signature } = req.body;
+    if (!razorpay_payment_id || !razorpay_signature) {
         throw new ApiError(400, "Razor Pay payment id and signature are required");
     }
-    const paymentStatus=razorPayClient.validateOrder(razorpay_payment_id,razorpay_signature);
-    if(!paymentStatus){
+    const paymentStatus = razorPayClient.validateOrder(razorpay_payment_id, razorpay_signature);
+    if (!paymentStatus) {
         throw new ApiError(400, "Payment verification failed");
     }
     return res
@@ -502,13 +459,13 @@ export const verifyPaymentByRazorPay=asyncHandler(async(req, res)=>{
         .json(new ApiResponse(200, {}, "Payment verified successfully by Razor Pay"));
 })
 
-export const makePaymentByStripe=asyncHandler(async(req,res)=>{
-    const {amount,stripeTokenId}=req.body;
-    if(!amount || !stripeTokenId){
+export const makePaymentByStripe = asyncHandler(async (req, res) => {
+    const { amount, stripeTokenId } = req.body;
+    if (!amount || !stripeTokenId) {
         throw new ApiError(400, "Amount and Stripe token id are required");
     }
-    const paymentStatus=stripeClient.applyCharges(amount,stripeTokenId);
-    if(!paymentStatus){
+    const paymentStatus = stripeClient.applyCharges(amount, stripeTokenId);
+    if (!paymentStatus) {
         throw new ApiError(400, "Payment failed through stripe");
     }
     return res
