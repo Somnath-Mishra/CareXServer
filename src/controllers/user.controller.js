@@ -5,7 +5,7 @@ import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import conf from "../conf/conf.js";
 import jwt from "jsonwebtoken";
-import { GoogleCalendar } from "../utils/googleCalendar.js";
+import { googleCalendar } from "../utils/googleCalendar.js";
 import { medicalSpecializations } from "./medicalSpecialization.js";
 import { findSpecialization } from "../utils/patientProblemWithSpecialization.js";
 import { findDoctors } from "../db/SearchDatabase/problemMapWithSpecilization.mjs";
@@ -73,7 +73,7 @@ export const markAppointmentAtCalender = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Missing required fields");
     }
 
-    const data = await GoogleCalendar.bookAnAppointmentInCalendar(
+    const data = await googleCalendar.bookAnAppointmentInCalendar(
         summary,
         description,
         year,

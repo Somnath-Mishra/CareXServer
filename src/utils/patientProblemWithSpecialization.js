@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import conf from '../../conf/conf';
+import conf from '../conf/conf.js';
 
 
 const genAI = new GoogleGenerativeAI(conf.geminiAPIKey);

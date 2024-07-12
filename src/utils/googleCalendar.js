@@ -141,5 +141,5 @@ class GoogleCalendar {
     }
 }
 
-export const GoogleCalendar =new GoogleCalendar();
+export const googleCalendar =new GoogleCalendar();
 
