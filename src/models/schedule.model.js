@@ -12,12 +12,16 @@ const scheduleSchema = new Schema({
     mode: {
         type: String,
         enum: ["online", "offline"],
-        required: true,
         default: "online"
     },
     location: {
         type: String,//if mode is online then this is meeting link, else this is physical location address
-        required: true
+        trim:true,
+    },
+    doctorId:{
+        type:Schema.Types.ObjectId,
+        ref:'Doctor',
+        required:true
     }
 },{
     timestamps: true

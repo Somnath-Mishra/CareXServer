@@ -110,8 +110,8 @@ class GoogleCalendar {
         second,
         timeZone,
         country,
-        patientUserName,
-        doctorUserName
+        patientEmail,
+        doctorEmail
     ){
         const isoStringStartDateTime=new Date(year,month-1,day,hour,minute,second).toISOString()
         const isoStringEndDateTime=new Date(year,month-1,day,hour,minute+15,second).toISOString()
@@ -128,7 +128,7 @@ class GoogleCalendar {
                 timeZone:timeZone
             },
             
-            attendees:[doctorUserName,patientUserName],
+            attendees:[doctorEmail,patientEmail],
             reminders:{
                 useDefault:true,
                 overrides:[

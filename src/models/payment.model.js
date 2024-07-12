@@ -15,7 +15,8 @@ const paymentSchema=Schema({
     },
     currency:{
         type:String,
-        required:true
+        required:true,
+        default:"USD"
     },
     paymentMethod:{
         type:String,

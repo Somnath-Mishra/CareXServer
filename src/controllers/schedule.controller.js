@@ -1,0 +1,109 @@
+import { Doctor } from "../models/doctor.mjs";
+import { Schedule } from "../models/schedule.model";
+import { ApiError } from "../utils/ApiError";
+import { ApiResponse } from "../utils/ApiResponse";
+import { asyncHandler } from "../utils/asyncHandler";
+
+export const createSchedule = asyncHandler(async (req, res) => {
+    const { startTime, endTime, mode, location } = req.body;
+    if (!startTime || !endTime) {
+        throw new ApiError(400, "Start and end time required for creating schdule")
+    }
+    if (mode?.trim() !== "" && location?.trim() === "") {
+        throw new ApiError(400, "Location required for creating schdule in offline")
+    }
+    if (mode?.trim() === "") {
+        //TODO: call google meet api and create an link for meeting
+        //const meetingLink=await googleMeet.createLink();
+        //location=meetingLink
+    }
+    const doctorId = req.user?._id;
+    const doctor = Doctor.findById(doctorId).select("-password -refreshToken");
+    if (!doctor) {
+        throw new ApiError(404, "Doctor not found");
+    }
+    const schedule = await Schedule.create({
+        startTime, endTime, mode, location, doctorId
+    })
+    if (!schedule) {
+        throw new ApiError(500, "Something went wrong while creating schedule");
+    }
+    res
+        .status(201)
+        .json(new ApiResponse(201, schedule,
+            "Schedule created successfully"
+        ))
+
+})
+export const updateSchedule = asyncHandler(async (req, res) => {
+    const { scheduleId, startTime, endTime, mode, location } = req.body;
+    if (!scheduleId || !startTime || !endTime) {
+        throw new ApiError(400, "Schedule id, start and end time required for updating schedule")
+    }
+    const schedule = await Schedule.findById(scheduleId);
+    const doctorId = req.user?._id;
+    const doctor = Doctor.findById(doctorId).select("-password -refreshToken");
+    if (doctor._id !== schedule.doctorId) {
+        throw new ApiError(403, "You are not authorized to update this schedule");
+    }
+
+    if (mode?.trim() !== "" && location?.trim() === "") {
+        throw new ApiError(400, "Location required for updating schdule for offline")
+    }
+    if (mode?.trim() === "") {
+        //TODO: call google meet api and create an link for meeting
+        //const meetingLink=await googleMeet.createLink();
+        //location=meetingLink
+    }
+
+    const updatedSchedule = await Schedule.findByIdAndUpdate(scheduleId, {
+        startTime, endTime, mode, location
+    }, { new: true })
+
+    if (!updateSchedule) {
+        throw new ApiError(500, "Something went wrong while updating schedule in database");
+    }
+    res
+        .status(200)
+        .json(new ApiResponse(200, updatedSchedule,
+            "Schedule updated successfully"
+        ))
+})
+export const deleteSchedule = asyncHandler(async (req, res) => {
+    const { scheduleId } = req.body;
+    if (!scheduleId) {
+        throw new ApiError(400, "Schedule id required for deleting schedule")
+    }
+    const schedule = await Schedule.findById(scheduleId);
+    const doctorId = req.user?._id;
+    const doctor = Doctor.findById(doctorId).select("-password -refreshToken");
+    if (doctor._id !== schedule.doctorId) {
+        throw new ApiError(403, "You are not authorized to delete this schedule");
+    }
+    await Schedule.findByIdAndDelete(scheduleId);
+    res
+        .status(200)
+        .json(new ApiResponse(200, {},
+            "Schedule deleted successfully"
+        ))
+})
+
+export const getScheduleDetails = asyncHandler(async (req, res) => {
+    const doctoId = req.user?._id;
+    const doctor = await Doctor.findById(doctorId).select("-password -refreshToken");
+    const scheduleDetails = await Schedule.aggregate([
+        {
+            $match: {
+                doctorId: doctor._id
+            }
+        }
+    ])
+    if (!scheduleDetails) {
+        throw new ApiError(404, "You haven't created any schedule");
+    }
+    res
+        .status(200)
+        .json(new ApiResponse(200, scheduleDetails,
+            "Schedule details fetched successfully"
+        ))
+});

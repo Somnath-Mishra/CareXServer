@@ -78,51 +78,6 @@ export const findDoctor = asyncHandler(async (req, res) => {
 //     }
 // }
 
-// export function makePaymentByRazorPay(req, res) {
-//     const { amount } = req.body;
-//     try {
-//         const orderPayload = razorPayClient.createOrder(amount);
-//         res.status(201).json(orderPayload);
-//     } catch (error) {
-//         console.error("Error occured at makePaymentByRazorPay() fileName user.controller.js : ", error);
-//         res.status(500).json({
-//             success: false,
-//             message: "Internal server error",
-//         })
-//     }
-// }
-
-// export async function initiatePaymentByStripe(req, res) {
-//     let { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
-//     // Validate request body
-//     if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
-//         return res.status(400).json({ error: 'Missing required fields' });
-//     }
-//     try {
-//         const isValidPayment = razorPayClient.validateOrder(razorpay_payment_id, razorpay_signature);
-
-//         if (!isValidPayment) {
-//             return res.status(400).json({ error: 'Invalid signature' });
-//         }
-
-//         // Fetch the payment details from Razorpay
-//         const payment = await razorPayClient.payments.fetch(razorpay_payment_id);
-
-//         if (payment.status === 'captured') {
-//             // Handle successful payment
-//             res.status(200).json({ message: 'Payment successful', payment });
-//         } else {
-//             // Handle payment failure or pending status
-//             res.status(400).json({ error: 'Payment not successful', payment });
-//         }
-//     } catch (error) {
-//         // Log the error for debugging
-//         console.error('Error verifying payment:', error);
-
-//         // Respond with an error message
-//         res.status(500).json({ error: 'Internal server error' });
-//     }
-// }
 
 // export async function getAllDiseaseName(req,res){
 //     try{
@@ -428,47 +383,4 @@ export const updateCoverImage = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(new ApiResponse(200, user, "Cover image updated successfully"));
-})
-
-export const makePaymentByRazorPay = asyncHandler(async (req, res) => {
-    const { amount } = req.body;
-    if (!amount) {
-        throw new ApiError(400, "Amount is required");
-    }
-
-    const orderPayload = razorPayClient.createOrder(amount);
-    if (!orderPayload) {
-        throw new ApiError(500, "Something went wrong while creating order through Razor Pay");
-    }
-    return res
-        .status(200)
-        .json(new ApiResponse(200, orderPayload, "Order created successfully by Razor Pay"));
-})
-
-export const verifyPaymentByRazorPay = asyncHandler(async (req, res) => {
-    const { razorpay_payment_id, razorpay_signature } = req.body;
-    if (!razorpay_payment_id || !razorpay_signature) {
-        throw new ApiError(400, "Razor Pay payment id and signature are required");
-    }
-    const paymentStatus = razorPayClient.validateOrder(razorpay_payment_id, razorpay_signature);
-    if (!paymentStatus) {
-        throw new ApiError(400, "Payment verification failed");
-    }
-    return res
-        .status(200)
-        .json(new ApiResponse(200, {}, "Payment verified successfully by Razor Pay"));
-})
-
-export const makePaymentByStripe = asyncHandler(async (req, res) => {
-    const { amount, stripeTokenId } = req.body;
-    if (!amount || !stripeTokenId) {
-        throw new ApiError(400, "Amount and Stripe token id are required");
-    }
-    const paymentStatus = stripeClient.applyCharges(amount, stripeTokenId);
-    if (!paymentStatus) {
-        throw new ApiError(400, "Payment failed through stripe");
-    }
-    return res
-        .status(200)
-        .json(new ApiResponse(200, {}, "Payment made successfully through stripe"));
 })
