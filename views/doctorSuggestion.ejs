@@ -1,6 +1,5 @@
-
-
-<%- include("./partials/frameUpper.ejs") %>    <div class="suggestion utility">
+<%- include("./partials/frameUpper.ejs") %>
+    <div class="suggestion utility">
         <div class="contain">
             <h1>Curated Doctors for your Diagnosis as per<br>your problems</h1>
 
@@ -9,24 +8,31 @@
                     <div class="profile">
                         <img src="/boy.png" alt="">
                         <div class="key">
-                            <h2><%= doctor.name %></h2>
-                            <h3><%= doctor.education %></h3>
-                            <h3>Fees : $<%=doctor.fees %> </h3>
+                            <h2>
+                                <%= doctor.name %>
+                            </h2>
+                            <h3>
+                                <%= doctor.education %>
+                            </h3>
+                            <h3>Fees : $<%=doctor.fees %>
+                            </h3>
                         </div>
                     </div>
                     <div class="lowerportion">
-                        <button  onclick="payWithRajorPay('<%=doctor._id%>', <%=doctor.fees%>)">Book Appointment</button>
+                        <button onclick="stripeClient.payWithStripe('<%=doctor._id%>', <%=doctor.fees%>)">Book Appointment</button>
                         <div class="specialization">
                             <% doctor.specialization.forEach(spec=>{ %>
-                                <h2> <%= spec %> </h2>
-                            <%})%>
+                                <h2>
+                                    <%= spec %>
+                                </h2>
+                                <%})%>
                         </div>
                     </div>
                 </div>
-            <% })%>
+                <% })%>
 
         </div>
     </div>
 
 
-<%- include("./partials/frameLower.ejs") %>
+    <%- include("./partials/frameLower.ejs") %>

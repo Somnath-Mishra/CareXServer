@@ -1,5 +1,34 @@
 import { getUser } from '../service/auth.mjs';
+import jwt from 'jsonwebtoken';
+import { asyncHandler } from '../utils/asyncHandler';
+import { ApiError } from '../utils/ApiError';
+import conf from '../conf/conf';
+import { User } from '../models/user.model';
 
+
+export const verifyJWT = asyncHandler(async (req, _, next) => {
+    try {
+        const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+        if (!accessToken) {
+            throw new ApiError(401, "Unauthorized Request");
+        }
+
+        const decodedToken = jwt.verify(accessToken, conf.ACCESS_TOKEN_SECRET);
+        const user = await User.findById(decodedToken?._id).select(
+            "-password -refreshToken"
+        );
+
+        if (!user) {
+            throw new ApiError(401, "Invalid Access Token");
+        }
+        req.user = user;
+        next();
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid Access Token");
+    }
+})
+
+/*
 async function checkForAuthentication(req,res,next){
     const tokenCookie=req.cookies?.token;
     req.user=null;
@@ -78,3 +107,4 @@ async function checkAuth(req, res, next) {
 
 
 export {checkForAuthentication,restrictTo, restrictToLoggedinUserOnly, checkAuth };
+*/
