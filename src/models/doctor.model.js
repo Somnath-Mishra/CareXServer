@@ -26,10 +26,12 @@ const doctorSchema = new Schema({
         type: Boolean,
         default: false
     },
-    availableTime: [{
-        type: Schema.Types.ObjectId,
-        ref: 'AvaliableTime'
-    }]
+    availableTime: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'AvaliableTime'
+        }
+    ]
 
 },
     {
