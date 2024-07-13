@@ -22,9 +22,7 @@ export const createSchedule = asyncHandler(async (req, res) => {
     if (!doctor) {
         throw new ApiError(404, "Doctor not found");
     }
-    if (doctor.role?.trim() !== "doctor") {
-        throw new ApiError(403, "You are not authorized to create schedule for this doctor");
-    }
+    
     const schedule = await Schedule.create({
         startTime, endTime, mode, location, doctorId
     })

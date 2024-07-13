@@ -61,30 +61,37 @@ export const createAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(500, "User is not found while creating appointment");
     }
 
-    const scheduleDetails = Schedule.findById(scheduleId);
-    const paymentDetails = Payment.findById(paymentId);
-    const doctorDetails = Doctor.find({
+    const scheduleDetails = await Schedule.findById(scheduleId);
+
+    if (!scheduleDetails) {
+        throw new ApiError(404, "Schedule details is not valid");
+    }
+
+    const paymentDetails = await Payment.findById(paymentId);
+
+    if (!paymentDetails) {
+        throw new ApiError(404, "Payment details is not valid");
+    }
+
+    const doctorDetails = await Doctor.find({
         userName: doctorUserName
     })
-    const patientDetails = User.find({ userName: patientUserName });
+    console.log(doctorDetails)
+    const patientDetails = await User.find({ userName: patientUserName });
     if (!patientDetails) {
         throw new ApiError(404, "Patient userName is not valid");
     }
     if (!doctorDetails) {
         throw new ApiError(404, "Doctor userName is not valid");
     }
-    if (!scheduleDetails) {
-        throw new ApiError(404, "Schedule details is not valid");
-    }
-    if (!paymentDetails) {
-        throw new ApiError(404, "Payment details is not valid");
-    }
+
+
     if (doctorDetails._id !== scheduleDetails.doctorId) {
         throw new ApiError(400, "Doctor and schedule details are not matched");
     }
     const appointmentDetails = await Appointment.create({
-        doctor: doctorUserName,
-        patient: patientUserName,
+        doctor: doctorDetails._id,
+        patient: patientDetails._id,
         schedule: scheduleId,
         payment: paymentId
     });
