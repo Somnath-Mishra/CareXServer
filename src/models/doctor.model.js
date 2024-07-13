@@ -26,15 +26,15 @@ const doctorSchema = new Schema({
         type: Boolean,
         default: false
     },
-    avaliableTime: {
+    availableTime: [{
         type: Schema.Types.ObjectId,
-        ref: "Schedule"
-    }
+        ref: 'AvaliableTime'
+    }]
+
 },
     {
         timestamps: true
     }
-
 )
 
-export const Doctor=User.discriminator("Doctor",doctorSchema);
+export const Doctor = User.discriminator("Doctor", doctorSchema);

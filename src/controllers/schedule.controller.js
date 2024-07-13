@@ -109,14 +109,11 @@ export const deleteSchedule = asyncHandler(async (req, res) => {
 })
 
 export const getScheduleDetails = asyncHandler(async (req, res) => {
-    const doctorId = req.user?._id;
+    const { doctorId } = req.body;
     const doctor = await Doctor.findById(doctorId).select("-password -refreshToken");
 
     if (!doctor) {
         throw new ApiError(404, "Doctor not found");
-    }
-    if (doctor.role.trim() !== "doctor") {
-        throw new ApiError(403, "You are not authorized to get schedule details");
     }
 
     const scheduleDetails = await Schedule.aggregate([
@@ -124,10 +121,19 @@ export const getScheduleDetails = asyncHandler(async (req, res) => {
             $match: {
                 doctorId: doctor._id
             }
+        },
+        {
+            $match: {
+                bookingSlot: {
+                    $elemMatch: {
+                        $eq: false
+                    }
+                }
+            }
         }
-    ])
+    ]);
     if (!scheduleDetails) {
-        throw new ApiError(404, "You haven't created any schedule");
+        throw new ApiError(404, "There is no schedule currently have");
     }
     res
         .status(200)
@@ -135,3 +141,32 @@ export const getScheduleDetails = asyncHandler(async (req, res) => {
             "Schedule details fetched successfully"
         ))
 });
+
+export const isScheduleFull = asyncHandler(async (req, res) => {
+    const { scheduleId } = req.body;
+    if (!scheduleId) {
+        throw new ApiError(400, "Schedule id is required for checking wheather the schedule is full");
+    }
+    const scheduleDetails = await Schedule.findById(scheduleId);
+    if (!scheduleDetails) {
+        throw new ApiError(404, "Schedule not found");
+    }
+    const slotInd = scheduleDetails.bookingSlot.map(slot => {
+        if (!slot) {
+            return slot;
+        }
+    })
+    if (!slotInd) {
+        res
+            .status(200)
+            .json(new ApiResponse(200, true,
+                "Schedule is full"
+            ))
+    }
+    res
+        .status(200)
+        .json(new ApiResponse(200, false,
+            "Schedule is not full"
+        ))
+
+})

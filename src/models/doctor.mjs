@@ -17,7 +17,7 @@ const doctorSchema = new mongoose.Schema({
   fees: {
     type: Number,
     required: true
-  }
+  },
 });
 const Doctor = mongoose.model("Doctor", doctorSchema);
 

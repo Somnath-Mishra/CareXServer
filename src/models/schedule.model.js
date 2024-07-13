@@ -16,15 +16,19 @@ const scheduleSchema = new Schema({
     },
     location: {
         type: String,//if mode is online then this is meeting link, else this is physical location address
-        trim:true,
+        trim: true,
     },
-    doctorId:{
-        type:Schema.Types.ObjectId,
-        ref:'Doctor',
-        required:true
-    }
-},{
+    doctorId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Doctor',
+        required: true
+    },
+    bookingSlot: {
+        type: [Boolean], // an array of booleans
+        default: Array(12).fill(false) // initializing the array with 12 false values
+    },
+}, {
     timestamps: true
 })
 
-export const Schedule=mongoose.model("Schedule",scheduleSchema);
+export const Schedule = mongoose.model("Schedule", scheduleSchema);

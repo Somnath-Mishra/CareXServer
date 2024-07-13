@@ -11,6 +11,7 @@ import { findSpecialization } from "../utils/patientProblemWithSpecialization.js
 import { findDoctors } from "../db/SearchDatabase/problemMapWithSpecilization.mjs";
 import { razorPayClient } from "../utils/razorPay.js";
 import { stripeClient } from "../utils/stripe.js";
+import { Doctor } from "../models/doctor.model.js";
 
 //Find specific doctor according to their specialization who might resolve
 //problem of the patient
@@ -55,28 +56,7 @@ export const findDoctor = asyncHandler(async (req, res) => {
 
 
 
-// export async function confirmBookByStripe(req, res) {
-//     const { doctorId, stripeTokenId } = req.body;
-//     try {
-//         const doctor = await Doctor.findById(doctorId);
-//         if (!doctor) {
-//             return res.status(404).json({
-//                 success: true,
-//                 message: "Internal server error"
-//             });
-//         }
 
-//         const fees = doctor.fees;
-//         stripeClient.applyCharges(fees, stripeTokenId);
-//     }
-//     catch (error) {
-//         console.error("Error occured at confirmBook() fileName user.controller.js : ", error);
-//         res.status(500).json({
-//             success: false,
-//             message: "Internal server error",
-//         })
-//     }
-// }
 
 
 // export async function getAllDiseaseName(req,res){
@@ -383,4 +363,23 @@ export const updateCoverImage = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(new ApiResponse(200, user, "Cover image updated successfully"));
+})
+
+
+export const getDoctorDetails = asyncHandler(async (req, res) => {
+    const { doctorId } = req.body;
+    if (!doctorId) {
+        throw new ApiError(400, "Please provide doctorId");
+    }
+    const doctor = await Doctor.findById(doctorId).select("-password -refreshToken");
+    if (!doctor) {
+        throw new ApiError(404, "Doctor not found");
+    }
+    res
+        .status(200)
+        .json(new ApiResponse(
+            200,
+            doctor,
+            "Doctor details fetched successfully"
+        ))
 })

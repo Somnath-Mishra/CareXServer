@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { addPaymentDetails, addPrescription, cancelAppointment, createAppointment, getAppointmentDetails, getPrescription, updateAppointmentStatus } from "../controllers/appointment.controller.js";
+import { addPaymentDetails, addPrescription, cancelAppointment, createAppointment, getAppointmentDetails, getAppointmentHistory, getPrescription, updateAppointmentStatus } from "../controllers/appointment.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router=Router();
@@ -13,6 +13,7 @@ router.route("/add-prescription").post(upload.single("prescription"),addPrescrip
 router.route("/get-prescription").get(getPrescription);
 router.route("/add-payment-details").post(addPaymentDetails);
 router.route("update-appointment-status").post(updateAppointmentStatus);
+router.route('/get-appointment-history').get(getAppointmentHistory);
 
 
 export default router;

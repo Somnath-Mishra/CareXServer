@@ -350,3 +350,71 @@ export const updateAppointmentStatus = asyncHandler(async (req, res) => {
             )
         )
 })
+
+export const getAppointmentHistory = asyncHandler(async (req, res) => {
+    const userId = req.user?._id;
+
+    const appointmentOfPatientHistory = await Appointment.aggregate([
+        {
+            $match: {
+                patient: userId,
+            }
+        },
+        {
+            $lookup: {
+                from: "schedules",
+                localField: "schedule",
+                foreignField: "_id",
+                as: "scheduleDetails"
+            }
+        },
+        {
+            $unwind: "$scheduleDetails"
+        },
+        {
+            $match: {
+                "scheduleDetails.startTime": {
+                    $lt: new Date()
+                }
+            }
+        }
+    ])
+    const appointmentOfDoctorHistory = await Appointment.aggregate([
+        {
+            $match: {
+                doctor: userId,
+            }
+        },
+        {
+            $lookup: {
+                from: "schedules",
+                localField: "schedule",
+                foreignField: "_id",
+                as: "scheduleDetails"
+            }
+        },
+        {
+            $unwind: "$scheduleDetails"
+        },
+        {
+            $match: {
+                "scheduleDetails.startTime": {
+                    $lt: new Date()
+                }
+            }
+        }
+    ])
+    const appointmentHistory = [...appointmentOfPatientHistory, ...appointmentOfDoctorHistory];
+    if (!appointmentHistory) {
+        throw new ApiError(404, "No appointments history found");
+    }
+    res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                appointmentHistory,
+                "Appointment history fetched successfully",
+            )
+        )
+})

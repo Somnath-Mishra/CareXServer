@@ -7,19 +7,15 @@ import { Doctor } from "../models/doctor.model.js";
 import { Payment } from "../models/payment.model.js";
 
 export const makePaymentByRazorPay = asyncHandler(async (req, res) => {
-    const { amount, appointmentId, doctorId } = req.body;
+    const { amount, doctorId } = req.body;
     if (!amount) {
         throw new ApiError(400, "Amount is required");
     }
 
-    if (!appointmentId || !doctorId) {
-        throw new ApiError(400, "Appointment Id and Doctor Id are required");
+    if (  !doctorId) {
+        throw new ApiError(400, " Doctor Id are required");
     }
 
-    const appointmentDetails = await Appointment.findById(appointmentId);
-    if (!appointmentDetails) {
-        throw new ApiError(404, "Appointment is not found");
-    }
     const doctorDetails = await Doctor.findById(doctorId);
     if (!doctorDetails) {
         throw new ApiError(404, "Doctor is not found");
@@ -45,17 +41,9 @@ export const makePaymentByRazorPay = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Something went wrong while inserting payment details in database");
     }
 
-    const updatedAppointment = await Appointment.findByIdAndUpdate(appointmentId, {
-        payment: paymentDetails._id
-    })
-
-    if (!updatedAppointment) {
-        throw new ApiError(500, "Something went wrong while updating appointment with payment details");
-    }
-
     return res
         .status(200)
-        .json(new ApiResponse(200, { paymentDetails, appointmentDetails }, "Order created successfully by Razor Pay"));
+        .json(new ApiResponse(200, { paymentDetails }, "Order created successfully by Razor Pay"));
 })
 
 export const verifyPaymentByRazorPay = asyncHandler(async (req, res) => {
@@ -73,17 +61,14 @@ export const verifyPaymentByRazorPay = asyncHandler(async (req, res) => {
 })
 
 export const makePaymentByStripe = asyncHandler(async (req, res) => {
-    const { amount, stripeTokenId, appointmentId, doctorId } = req.body;
+    const { amount, stripeTokenId, doctorId } = req.body;
     if (!amount || !stripeTokenId) {
         throw new ApiError(400, "Amount and Stripe Token Id are required");
     }
-    if (!appointmentId || !doctorId) {
-        throw new ApiError(400, "Appointment Id and Doctor Id are required");
+    if (!doctorId) {
+        throw new ApiError(400, "Doctor Id are required");
     }
-    const appointmentDetails = await Appointment.findById(appointmentId);
-    if (!appointmentDetails) {
-        throw new ApiError(404, "Appointment is not found");
-    }
+    
     const doctorDetails = await Doctor.findById(doctorId);
     if (!doctorDetails) {
         throw new ApiError(404, "Doctor is not found");
@@ -105,15 +90,10 @@ export const makePaymentByStripe = asyncHandler(async (req, res) => {
     if (!paymentDetails) {
         throw new ApiError(500, "Something went wrong while inserting payment details in database");
     }
-    const updatedAppointment = await Appointment.findByIdAndUpdate(appointmentId, {
-        payment: paymentDetails._id
-    })
-    if (!updatedAppointment) {
-        throw new ApiError(500, "Something went wrong while updating appointment with payment details");
-    }
+    
     return res
         .status(200)
-        .json(new ApiResponse(200, { paymentDetails, appointmentDetails }, "Payment made successfully through stripe"));
+        .json(new ApiResponse(200, { paymentDetails }, "Payment made successfully through stripe"));
 })
 
 export const downloadInvoicePDF = asyncHandler(async (req, res) => {
