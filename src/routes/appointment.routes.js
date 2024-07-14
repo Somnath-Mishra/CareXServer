@@ -12,7 +12,7 @@ router.route("/get-appointment-details").get(getAppointmentDetails);
 router.route("/add-prescription").post(upload.single("prescription"),addPrescription);
 router.route("/get-prescription").get(getPrescription);
 router.route("/add-payment-details").post(addPaymentDetails);
-router.route("update-appointment-status").post(updateAppointmentStatus);
+router.route("/update-appointment-status").post(updateAppointmentStatus);
 router.route('/get-appointment-history').get(getAppointmentHistory);
 
 

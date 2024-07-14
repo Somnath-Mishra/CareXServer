@@ -73,20 +73,20 @@ export const createAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Payment details is not valid");
     }
 
-    const doctorDetails = await Doctor.find({
+    let doctorDetails = await Doctor.find({
         userName: doctorUserName
     })
-    console.log(doctorDetails)
-    const patientDetails = await User.find({ userName: patientUserName });
-    if (!patientDetails) {
-        throw new ApiError(404, "Patient userName is not valid");
-    }
+    doctorDetails = doctorDetails[0];
     if (!doctorDetails) {
         throw new ApiError(404, "Doctor userName is not valid");
     }
+    let patientDetails = await User.find({ userName: patientUserName });
+    patientDetails = patientDetails[0];
+    if (!patientDetails) {
+        throw new ApiError(404, "Patient userName is not valid");
+    }
 
-
-    if (doctorDetails._id !== scheduleDetails.doctorId) {
+    if (!doctorDetails._id.equals(scheduleDetails.doctorId)) {
         throw new ApiError(400, "Doctor and schedule details are not matched");
     }
     const appointmentDetails = await Appointment.create({
@@ -148,7 +148,7 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
     if (!appointmentDetails) {
         throw new ApiError(404, "Appointment is not found");
     }
-    if (appointmentDetails.patient !== userId && appointmentDetails.doctor !== userId) {
+    if (!appointmentDetails.patient.equals(userId) && !appointmentDetails.doctor.equals(userId)) {
         throw new ApiError(403, "You are not authorized to cancel this appointment");
     }
     if (appointmentDetails.prescription) {
@@ -173,11 +173,17 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
 
 export const getAppointmentDetails = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
+    if (!userId) {
+        throw new ApiError(400, "User is not found");
+    }
 
-    const upcomingAppointmentsOfPatient = await Appointment.aggregate([
+    const upcomingAppointments = await Appointment.aggregate([
         {
             $match: {
-                patient: userId,
+                $or: [
+                    { patient: userId },
+                    { doctor: userId }
+                ]
             }
         },
         {
@@ -197,53 +203,44 @@ export const getAppointmentDetails = asyncHandler(async (req, res) => {
                     $gt: new Date()
                 }
             }
-        }
-    ])
-    const upcomingAppointmentsOfDoctor = await Appointment.aggregate([
-        {
-            $match: {
-                doctor: userId,
-            }
         },
         {
-            $lookup: {
-                from: "schedules",
-                localField: "schedule",
-                foreignField: "_id",
-                as: "scheduleDetails"
-            }
-        },
-        {
-            $unwind: "$scheduleDetails"
-        },
-        {
-            $match: {
-                "scheduleDetails.startTime": {
-                    $gt: new Date()
-                }
+            $project: {
+                _id: 1,
+                doctor: 1,
+                patient: 1,
+                schedule: 1,
+                payment: 1,
+                "scheduleDetails.startTime": 1,
+                "scheduleDetails.endTime": 1,
+                "scheduleDetails.mode": 1,
+                "scheduleDetails.location": 1,
+                "scheduleDetails.bookingSlot": 1,
             }
         }
-    ])
-    const upcomingAppointments = [...upcomingAppointmentsOfPatient, ...upcomingAppointmentsOfDoctor];
-    if (!upcomingAppointments) {
+    ]);
+
+
+    if (upcomingAppointments.length === 0) {
         throw new ApiError(404, "No upcoming appointments found");
     }
-    res
-        .status(200)
-        .json(
-            new ApiResponse(
-                upcomingAppointments,
-                "Upcoming appointments fetched successfully",
-            )
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            upcomingAppointments,
+            "Upcoming appointments fetched successfully"
         )
-})
+    );
+});
+
 
 export const addPrescription = asyncHandler(async (req, res) => {
     const { appointmentId } = req.body;
     if (!appointmentId) {
         throw new ApiError(400, "Appointment id is required for linking prescription");
     }
-    const appointmentDetails = Appointment.findById(appointmentId);
+    const appointmentDetails = await Appointment.findById(appointmentId);
     if (!appointmentDetails) {
         throw new ApiError(404, "Appointment is not found");
     }
@@ -257,7 +254,11 @@ export const addPrescription = asyncHandler(async (req, res) => {
     }
     const updatedAppointment = await Appointment.findByIdAndUpdate(appointmentId, {
         prescription: prescription.url
-    })
+    },
+        {
+            new: true,
+        }
+    )
     if (!updatedAppointment) {
         throw new ApiError(500, "Something went wrong while updating appointment with prescription");
     }
@@ -278,7 +279,7 @@ export const getPrescription = asyncHandler(async (req, res) => {
     if (!appointmentId) {
         throw new ApiError(400, "Appointment id is required for fetching prescription");
     }
-    const appointmentDetails = Appointment.findById(appointmentId);
+    const appointmentDetails = await Appointment.findById(appointmentId);
     if (!appointmentDetails) {
         throw new ApiError(404, "Appointment is not found");
     }
@@ -316,7 +317,11 @@ export const addPaymentDetails = asyncHandler(async (req, res) => {
     }
     const updatedAppointment = await Appointment.findByIdAndUpdate(appointmentId, {
         payment: paymentId
-    })
+    },
+        {
+            new: true
+        }
+    )
     if (!updatedAppointment) {
         throw new ApiError(500, "Something went wrong while updating appointment with payment details");
     }
@@ -343,7 +348,11 @@ export const updateAppointmentStatus = asyncHandler(async (req, res) => {
     }
     const updatedAppointment = await Appointment.findByIdAndUpdate(appointmentId, {
         status: appointmentStatus
-    })
+    },
+        {
+            new: true,
+        }
+    )
     if (!updateAppointmentStatus) {
         throw new ApiError(500, "Something went wrong while updating appointment status");
     }
@@ -361,10 +370,13 @@ export const updateAppointmentStatus = asyncHandler(async (req, res) => {
 export const getAppointmentHistory = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
 
-    const appointmentOfPatientHistory = await Appointment.aggregate([
+    const appointmentHistory = await Appointment.aggregate([
         {
             $match: {
-                patient: userId,
+                $or: [
+                    { patient: userId },
+                    { doctor: userId }
+                ]
             }
         },
         {
@@ -384,34 +396,22 @@ export const getAppointmentHistory = asyncHandler(async (req, res) => {
                     $lt: new Date()
                 }
             }
-        }
-    ])
-    const appointmentOfDoctorHistory = await Appointment.aggregate([
-        {
-            $match: {
-                doctor: userId,
-            }
         },
         {
-            $lookup: {
-                from: "schedules",
-                localField: "schedule",
-                foreignField: "_id",
-                as: "scheduleDetails"
-            }
-        },
-        {
-            $unwind: "$scheduleDetails"
-        },
-        {
-            $match: {
-                "scheduleDetails.startTime": {
-                    $lt: new Date()
-                }
+            $project: {
+                _id: 1,
+                doctor: 1,
+                patient: 1,
+                schedule: 1,
+                payment: 1,
+                "scheduleDetails.startTime": 1,
+                "scheduleDetails.endTime": 1,
+                "scheduleDetails.mode": 1,
+                "scheduleDetails.location": 1,
+                "scheduleDetails.bookingSlot": 1,
             }
         }
     ])
-    const appointmentHistory = [...appointmentOfPatientHistory, ...appointmentOfDoctorHistory];
     if (!appointmentHistory) {
         throw new ApiError(404, "No appointments history found");
     }
