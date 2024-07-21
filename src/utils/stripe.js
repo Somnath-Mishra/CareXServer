@@ -13,7 +13,7 @@ export class StripeClient {
     if (stripe!==null) { return stripe; }
     return { error: "Cannot create Stripe client " };
   }
-  applyCharges(fees, stripeTokenId) {
+  applyCharges(fees) {
     stripe.charges.create({
       amount: fees * 100,
       source: stripeTokenId,
@@ -23,6 +23,14 @@ export class StripeClient {
     }).catch(function () {
       return false;
     });
+  }
+  async createPaymentIntent(amount) {
+    const paymentIntent = await this.stripe.paymentIntents.create({
+      amount: amount,
+      currency: 'usd',
+      
+    });
+    return paymentIntent;
   }
 }
 

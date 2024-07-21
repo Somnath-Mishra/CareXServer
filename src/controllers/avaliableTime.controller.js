@@ -53,7 +53,7 @@ export const createAvaliableTime = asyncHandler(async (req, res) => {
 })
 
 export const getAvaliableTime = asyncHandler(async (req, res) => {
-    const { avaliableTimeId } = req.body;
+    const avaliableTimeId  = req.query.avaliableTimeId;
     const doctorId = req.user._id;
     if (!avaliableTimeId) {
         throw new ApiError(400, "Avaliable time id is required");
@@ -84,7 +84,7 @@ export const getAvaliableTime = asyncHandler(async (req, res) => {
 })
 
 export const deleteAvaliableTime = asyncHandler(async (req, res) => {
-    const { avaliableTimeId } = req.body;
+    const avaliableTimeId  = req.query.avaliableTimeId;
     const doctorId = req.user._id;
     if (!avaliableTimeId) {
         throw new ApiError(400, "Avaliable time id is required");

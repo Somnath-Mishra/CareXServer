@@ -107,7 +107,7 @@ export const deleteSchedule = asyncHandler(async (req, res) => {
 })
 
 export const getScheduleDetails = asyncHandler(async (req, res) => {
-    const { doctorId } = req.body;
+    const doctorId = req.query.doctorId;
     const doctor = await Doctor.findById(doctorId).select("-password -refreshToken");
 
     if (!doctor) {
@@ -124,7 +124,7 @@ export const getScheduleDetails = asyncHandler(async (req, res) => {
             $match: {
                 bookingSlot: {
                     $elemMatch: {
-                        $eq: false
+                        $eq: null
                     }
                 }
             }

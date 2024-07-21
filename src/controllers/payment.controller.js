@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { Appointment } from "../models/appointment.model.js";
 import { Doctor } from "../models/doctor.model.js";
 import { Payment } from "../models/payment.model.js";
+import { stripeClient } from "../utils/stripe.js";
 
 export const makePaymentByRazorPay = asyncHandler(async (req, res) => {
     const { amount, doctorId } = req.body;
@@ -22,20 +23,21 @@ export const makePaymentByRazorPay = asyncHandler(async (req, res) => {
     }
 
 
-    const orderPayload = razorPayClient.createOrder(amount);
+    const orderPayload =await razorPayClient.createOrder(amount);
     if (!orderPayload) {
         throw new ApiError(500, "Something went wrong while creating order through Razor Pay");
     }
+    console.log(orderPayload);
 
     const paymentDetails = await Payment.create({
         user: req.user._id,
         doctor: doctorId,
         amount: amount,
-        currency: orderPayload.currency,
+        currency: orderPayload.order.currency,
         paymentMethod: "RazorPay",
         paymentStatus: "success",
-        paymentReferrence: orderPayload.id
-    })
+        paymentReferrence: orderPayload.order.id,
+    });
 
     if (!paymentDetails) {
         throw new ApiError(500, "Something went wrong while inserting payment details in database");
@@ -94,6 +96,20 @@ export const makePaymentByStripe = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(new ApiResponse(200, { paymentDetails }, "Payment made successfully through stripe"));
+})
+
+export const getClientSecretFromStripe=asyncHandler(async(req,res)=>{
+    const {amount}=req.body;
+    if(!amount){
+        throw new ApiError(400,"Amount is required");
+    }
+    const paymentIntent=await stripeClient.createPaymentIntent(amount);
+    if(!paymentIntent){
+        throw new ApiError(500,"Something went wrong while creating payment intent");
+    }
+    return res
+    .status(200)
+    .json(new ApiResponse(200,{clientSecret:paymentIntent.client_secret},"Payment intent created successfully"));
 })
 
 export const downloadInvoicePDF = asyncHandler(async (req, res) => {

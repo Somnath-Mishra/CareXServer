@@ -5,14 +5,10 @@ import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import conf from "../conf/conf.js";
 import jwt from "jsonwebtoken";
-import { googleCalendar } from "../utils/googleCalendar.js";
 import { medicalSpecializations } from "./medicalSpecialization.js";
 import { findSpecialization } from "../utils/patientProblemWithSpecialization.js";
-import { findDoctors } from "../db/SearchDatabase/problemMapWithSpecilization.mjs";
-import { razorPayClient } from "../utils/razorPay.js";
-import { stripeClient } from "../utils/stripe.js";
+import { findDoctors, getUniqueSpecializations } from "../db/SearchDatabase/problemMapWithSpecilization.mjs";
 import { Doctor } from "../models/doctor.model.js";
-
 //Find specific doctor according to their specialization who might resolve
 //problem of the patient
 export const findDoctor = asyncHandler(async (req, res) => {
@@ -73,13 +69,31 @@ export const findDoctor = asyncHandler(async (req, res) => {
 //     }
 // }
 
+export const getAllDiseaseName = asyncHandler(async (req, res) => {
+    const specialization = await getUniqueSpecializations();
+    if (!specialization) {
+        throw new ApiError(404, "Specialization not found");
+    }
+    res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                specialization,
+                "Specialization fetched successfully",
+            )
+        );
+})
 
 export const registerUser = asyncHandler(async (req, res) => {
-    const { userName, email, phoneNumber, firstName, lastName, address, password } = req.body;
+    const { userName, email, phoneNumber, firstName, lastName, address, password,confirmPassword } = req.body;
     if (
-        [userName, email, phoneNumber, firstName, lastName, address, password].some((field) => field?.trim() === "")
+        [userName, email, phoneNumber, firstName, lastName, address, password,confirmPassword].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required");
+    }
+    if(password!==confirmPassword){
+        throw new ApiError(400,"Password and confirm password should be same");
     }
     const exitedUser = await User.findOne({
         $or: [{ email }, { userName }]
@@ -135,7 +149,7 @@ export const generateAccessAndRefreshToken = async (userId) => {
     try {
         const user = await User.findById(userId);
         const accessToken = await user.generateAccessToken();
-        const refreshToken =await user.generateRefreshToken();
+        const refreshToken = await user.generateRefreshToken();
 
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
@@ -251,7 +265,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 export const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword, confirmPassword } = req.body;
     const userId = req.user?._id;
-    const user=await User.findById(userId);
+    const user = await User.findById(userId);
     if (!oldPassword || !newPassword || !confirmPassword) {
         throw new ApiError(400, "All password fields are required");
     }
@@ -281,7 +295,7 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
     if (!firstName || !lastName || !address || !email || !phoneNumber) {
         throw new ApiError(400, "All fields are required");
     }
-    const user =await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
@@ -381,5 +395,87 @@ export const getDoctorDetails = asyncHandler(async (req, res) => {
             200,
             doctor,
             "Doctor details fetched successfully"
+        ))
+})
+
+export const getDoctorDetailsToSolvePatientProblem = asyncHandler(async (req, res) => {
+    const { patientProblems } = req.body;
+    if (!patientProblems) {
+        throw new ApiError(400, "Please provide patient problems");
+    }
+    let getUniqueSpecialization = await Doctor.aggregate([
+        {
+            $unwind: "$specialization"
+        },
+        {
+            $group: {
+                _id: null,
+                uniqueSpecializations: { $addToSet: "$specialization" }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                specializations: {
+                    $reduce: {
+                        input: "$uniqueSpecializations",
+                        initialValue: "",
+                        in: {
+                            $cond: {
+                                if: { $eq: ["$$value", ""] },
+                                then: "$$this",
+                                else: { $concat: ["$$value", ", ", "$$this"] }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]);
+
+    getUniqueSpecialization = getUniqueSpecialization[0]?.specializations;
+    if (!getUniqueSpecialization) {
+        throw new ApiError(500, "Something went wrong while fetching unique specialization");
+    }
+    let specializations = await findSpecialization(patientProblems, getUniqueSpecialization);
+    if (!specializations) {
+        throw new ApiError(500, "Something went wrong while finding specialiazation from genAI")
+    }
+    specializations = specializations.split(",");
+    const doctors = await Doctor.aggregate([
+        {
+            $match: {
+                specialization: { $in: specializations }
+            }
+        },
+        {
+            $group: {
+                _id: "$_id", // Group by doctor ID to ensure uniqueness
+                details: { $first: "$$ROOT" } // Collect full document details
+            }
+        },
+        {
+            $replaceRoot: {
+                newRoot: "$details" // Replace root with the collected document details
+            }
+        },
+        {
+            $project: {
+                password: 0, // Exclude password field
+                refreshToken: 0 // Exclude refreshToken field
+            }
+        }
+    ]);
+
+
+    if (!doctors) {
+        throw new ApiError(404, "Doctor not found");
+    }
+    res
+        .status(200)
+        .json(new ApiResponse(
+            200,
+            doctors,
+            "Doctor fetched successfully"
         ))
 })

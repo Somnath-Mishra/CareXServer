@@ -31,6 +31,23 @@ const appointmentSchema = Schema({
     payment:{
         type:Schema.Types.ObjectId,
         ref:'Payment'
+    },
+    startTime:{
+        type:Date,
+        required:true
+    },
+    endTime:{
+        type:Date,
+        required:true
+    },
+    location:{
+        type:String,
+        required:true
+    },
+    mode:{
+        type:String,
+        enum:['online','offline'],
+        required:true
     }
 },
     {

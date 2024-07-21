@@ -24,8 +24,8 @@ const scheduleSchema = new Schema({
         required: true
     },
     bookingSlot: {
-        type: [Boolean], // an array of booleans
-        default: Array(12).fill(false) // initializing the array with 12 false values
+        type: [String], // an array of booleans
+        default: Array(12).fill(null) // initializing the array with 12 false values
     },
 }, {
     timestamps: true

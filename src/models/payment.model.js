@@ -20,7 +20,6 @@ const paymentSchema=Schema({
     },
     paymentMethod:{
         type:String,
-        enum:["stripe","razorpay"],
         required:true
     },
     paymentStatus:{
@@ -30,7 +29,6 @@ const paymentSchema=Schema({
     },
     paymentReferrence:{
         type:String,
-        enum:["RazorPay","Stripe"],
         required:true
     },
     invoice:{

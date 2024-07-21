@@ -2,7 +2,7 @@ import { Doctor } from "../models/doctor.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
-import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {uploadOnCloudinary, uploadPDFOnCloudinary} from "../utils/cloudinary.js"
 import { User } from "../models/user.model.js"
 
 export const uploadDoctorSpecificDetails = asyncHandler(async (req, res) => {
@@ -42,7 +42,7 @@ export const uploadDoctorSpecificDetails = asyncHandler(async (req, res) => {
 })
 
 export const getPatientDetails = asyncHandler(async (req, res) => {
-    const { patientId } = req.body;
+    const patientId = req.query.patientId;
     if (!patientId) {
         throw new ApiError(400, "Patient id is required");
     }
@@ -83,6 +83,7 @@ export const registerDoctor = asyncHandler(async (req, res) => {
         lastName,
         address,
         password,
+        confirmPassword,
         degree,
         instituteName,
         specialization,
@@ -97,6 +98,7 @@ export const registerDoctor = asyncHandler(async (req, res) => {
             lastName,
             address,
             password,
+            confirmPassword,
             degree,
             instituteName,
             specialization,
@@ -108,8 +110,12 @@ export const registerDoctor = asyncHandler(async (req, res) => {
     const exitedUser = await Doctor.findOne({
         $or: [{ email }, { userName }]
     });
-    if (!exitedUser) {
+    if (exitedUser) {
         throw new ApiError(409, "User with email or username already exists");
+    }
+
+    if (password !== confirmPassword) {
+        throw new ApiError(400, "Password and confirm password should match");
     }
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
@@ -136,7 +142,7 @@ export const registerDoctor = asyncHandler(async (req, res) => {
     if(!licenceLocalPath){
         throw new ApiError(400, "Licence is required")
     }
-    const licence=await uploadOnCloudinary(licenceLocalPath);
+    const licence=await uploadPDFOnCloudinary(licenceLocalPath);
     if(!licence.url){
         throw new ApiError(500, "Licence upload failed");
     }
