@@ -22,10 +22,10 @@ router.route('/doctor-register').post(
     registerDoctor
   );
 
-router.use(verifyJWT);
+// router.use(verifyJWT);
 
-router.route("/upload-doctor-specific-details").post(uploadDoctorSpecificDetails);
-router.route("/get-patient-details").get(getPatientDetails);
+router.route("/upload-doctor-specific-details").post(verifyJWT,uploadDoctorSpecificDetails);
+router.route("/get-patient-details").get(verifyJWT,getPatientDetails);
 
 
 export default router;

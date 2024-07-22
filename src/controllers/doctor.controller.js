@@ -147,6 +147,11 @@ export const registerDoctor = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Licence upload failed");
     }
 
+    const specialiazations=specialization.split(',');
+    if(specialiazations.length===0){
+        throw new ApiError(400, "Specialization is required and also comma seperated");
+    }
+
     const doctor = await Doctor.create({
         userName: userName.toLowerCase(),
         email,
@@ -157,7 +162,7 @@ export const registerDoctor = asyncHandler(async (req, res) => {
         password,
         degree,
         instituteName,
-        specialization,
+        specialiazations,
         visitFees,
         role: "doctor",
         licence: licence.url,

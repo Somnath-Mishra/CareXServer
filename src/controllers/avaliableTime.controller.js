@@ -64,7 +64,7 @@ export const createAvaliableTime = asyncHandler(async (req, res) => {
     res.status(200).json(
         new ApiResponse(
             200,
-            { avaliableTime, updatedDoctor },
+            avaliableTime ,
             "Avaliable time created successfully"
         )
     );
@@ -86,10 +86,10 @@ export const getAvaliableTime = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Doctor not found");
     }
 
-    let avaliableTimes = await Doctor.aggregate([
+    let availableTimes = await Doctor.aggregate([
         {
             $match: {
-                _id:new Types.ObjectId(doctorId),
+                _id: new Types.ObjectId(doctorId),
             },
         },
         {
@@ -97,7 +97,7 @@ export const getAvaliableTime = asyncHandler(async (req, res) => {
         },
         {
             $lookup: {
-                from: "avaliabletimes",
+                from: "avaliabletimes", // Make sure the collection name is correct
                 localField: "availableTime",
                 foreignField: "_id",
                 as: "availableTimeDetails",
@@ -107,16 +107,20 @@ export const getAvaliableTime = asyncHandler(async (req, res) => {
             $unwind: "$availableTimeDetails",
         },
         {
+            $replaceRoot: { newRoot: "$availableTimeDetails" },
+        },
+        {
             $project: {
-                "availableTimeDetails.startTime": 1,
-                "availableTimeDetails.frequencyTime": 1,
+                _id: 1,
+                startTime: 1,
+                frequencyTime: 1,
             },
         },
     ]);
-    avaliableTimes=avaliableTimes[0];
+    // avaliableTimes=avaliableTimes[0];
 
 
-    if (!avaliableTimes) {
+    if (!availableTimes) {
         return res
             .status(200)
             .json(new ApiResponse(200, {}, "No avaliable time found"));
@@ -124,7 +128,7 @@ export const getAvaliableTime = asyncHandler(async (req, res) => {
     res.status(200).json(
         new ApiResponse(
             200,
-            avaliableTimes,
+            availableTimes,
             "Avaliable time fetched successfully"
         )
     );
