@@ -23,8 +23,9 @@ const doctorSchema = new Schema({
         required: true,
     },
     isActive: {
-        type: Boolean,
-        default: false
+        type: String,
+        enum:['false','true','reject'],
+        default: 'false'
     },
     availableTime: [
         {

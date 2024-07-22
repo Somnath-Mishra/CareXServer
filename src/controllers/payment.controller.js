@@ -27,7 +27,6 @@ export const makePaymentByRazorPay = asyncHandler(async (req, res) => {
     if (!orderPayload) {
         throw new ApiError(500, "Something went wrong while creating order through Razor Pay");
     }
-    console.log(orderPayload);
 
     const paymentDetails = await Payment.create({
         user: req.user._id,

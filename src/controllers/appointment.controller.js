@@ -7,7 +7,10 @@ import { Payment } from "../models/payment.model.js";
 import { Appointment } from "../models/appointment.model.js";
 import { Doctor } from "../models/doctor.model.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary, uploadPDFOnCloudinary } from "../utils/cloudinary.js";
+import {
+    uploadOnCloudinary,
+    uploadPDFOnCloudinary,
+} from "../utils/cloudinary.js";
 
 export const markAppointmentAtCalender = async (
     summary,
@@ -71,8 +74,7 @@ export const markAppointmentAtCalender = async (
 };
 
 export const createAppointment = asyncHandler(async (req, res) => {
-    const { doctorId, scheduleId, paymentId, timeZone, country } =
-        req.body;
+    const { doctorId, scheduleId, paymentId, timeZone, country } = req.body;
     const patientUserName = req.user?.userName;
     const userId = req.user?._id;
 
@@ -93,7 +95,7 @@ export const createAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Schedule details is not valid");
     }
 
-    let emptySlotIndex = scheduleDetails.bookingSlot.findIndex((slot) => !slot);
+    let emptySlotIndex = scheduleDetails.bookingSlot.findIndex((slot) => slot==null);
 
     if (emptySlotIndex === -1) {
         throw new ApiError(400, "All slots are booked");
@@ -105,8 +107,7 @@ export const createAppointment = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Payment details is not valid");
     }
 
-    
-    const doctorDetails=await Doctor.findById(doctorId);
+    const doctorDetails = await Doctor.findById(doctorId);
     if (!doctorDetails) {
         throw new ApiError(404, "Doctor Id is not valid");
     }
@@ -127,22 +128,21 @@ export const createAppointment = asyncHandler(async (req, res) => {
     const month = scheduleDetails.startTime.getMonth();
     const day = scheduleDetails.startTime.getDate();
     const hour =
-        scheduleDetails.startTime.getHours() +Math.floor((emptySlotIndex + 1) / 6);
+        scheduleDetails.startTime.getHours() +
+        Math.floor((emptySlotIndex + 1) / 6);
     const minute =
-        scheduleDetails.startTime.getMinutes() +
-        ((emptySlotIndex) % 6) * 10;
+        scheduleDetails.startTime.getMinutes() + (emptySlotIndex % 6) * 10;
     const second = scheduleDetails.startTime.getSeconds();
 
-    const startTime=new Date(year, month-1, day, hour, minute, second);
-    const endTime=new Date(year, month-1, day, hour, minute + 10, second);
+    const startTime = new Date(year, month - 1, day, hour, minute, second);
+    const endTime = new Date(year, month - 1, day, hour, minute + 10, second);
 
     let location;
-    if(scheduleDetails.mode==='online'){
+    if (scheduleDetails.mode === "online") {
         //TODO: create a google meet link
-        location='https://meet.google.com';
-    }
-    else{
-        location=scheduleDetails.location;
+        location = "https://meet.google.com";
+    } else {
+        location = scheduleDetails.location;
     }
 
     const appointmentDetails = await Appointment.create({
@@ -150,10 +150,10 @@ export const createAppointment = asyncHandler(async (req, res) => {
         patient: patientDetails._id,
         schedule: scheduleId,
         payment: paymentId,
-        startTime:startTime,
-        endTime:endTime,
-        mode:scheduleDetails.mode,
-        location:location
+        startTime: startTime,
+        endTime: endTime,
+        mode: scheduleDetails.mode,
+        location: location,
     });
     if (!appointmentDetails) {
         throw new ApiError(
@@ -194,12 +194,11 @@ export const createAppointment = asyncHandler(async (req, res) => {
     //     );
     // }
     return res.status(200).json(
-        200,
         new ApiResponse(
+            200,
             {
                 appointmentDetails,
                 emptySlotIndex,
-                // data,
             },
             "Appointment created successfully"
         )
@@ -211,9 +210,8 @@ export const createAppointment = asyncHandler(async (req, res) => {
 // })
 
 export const cancelAppointment = asyncHandler(async (req, res) => {
-    const {appointmentId} = req.body;
+    const { appointmentId } = req.body;
     const userId = req.user?._id;
-    console.log(req.body);
     if (!appointmentId) {
         throw new ApiError(
             400,
@@ -239,7 +237,7 @@ export const cancelAppointment = asyncHandler(async (req, res) => {
     const scheduleId = appointmentDetails.schedule;
     const scheduleDetails = await Schedule.findById(scheduleId);
     scheduleDetails.bookingSlot[
-        scheduleDetails.bookingSlot.findIndex((slot) => slot.equals(userId))
+        scheduleDetails.bookingSlot.findIndex((slot) => slot===userId)
     ] = null;
     await scheduleDetails.save();
 
@@ -264,56 +262,64 @@ export const getAppointmentDetails = asyncHandler(async (req, res) => {
     const upcomingAppointments = await Appointment.aggregate([
         {
             $match: {
-                $or: [
-                    { patient: userId },
-                    { doctor: userId }
-                ]
-            }
+                $or: [{ patient: userId }, { doctor: userId }],
+            },
         },
-        // {
-        //     $lookup: {
-        //         from: "schedules",
-        //         localField: "schedule",
-        //         foreignField: "_id",
-        //         as: "scheduleDetails"
-        //     }
-        // },
-        // {
-        //     $unwind: "$scheduleDetails"
-        // },
         {
             $match: {
-                "startTime": {
-                    $gt: new Date()
-                }
-            }
+                startTime: {
+                    $gt: new Date(),
+                },
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "doctor",
+                foreignField: "_id",
+                as: "doctorDetails",
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "patient",
+                foreignField: "_id",
+                as: "patientDetails",
+            },
+        },
+        {
+            $unwind: {
+                path: "$doctorDetails",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $unwind: {
+                path: "$patientDetails",
+                preserveNullAndEmptyArrays: true,
+            },
         },
         {
             $project: {
                 _id: 1,
-                doctor: 1,
-                patient: 1,
-                schedule: 1,
-                payment: 1,
-                startTime:1,
-                endTime:1,
-                mode:1,
-                location:1,
-            }
-        }
+                // doctor: 1,
+                // patient: 1,
+                startTime: 1,
+                endTime: 1,
+                mode: 1,
+                location: 1,
+                doctorFirstName: "$doctorDetails.firstName",
+                doctorLastName: "$doctorDetails.lastName",
+                patientFirstName: "$patientDetails.firstName",
+                patientLastName: "$patientDetails.lastName",
+            },
+        },
     ]);
-    
-
 
     if (upcomingAppointments.length === 0) {
-        res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                {},
-                "No upcoming appointments found"
-            )
+        res.status(200).json(
+            new ApiResponse(200, {}, "No upcoming appointments found")
         );
     }
 
@@ -334,10 +340,19 @@ export const addPrescription = asyncHandler(async (req, res) => {
             "Appointment id is required for linking prescription"
         );
     }
+    const user = req.user;
     const appointmentDetails = await Appointment.findById(appointmentId);
     if (!appointmentDetails) {
         throw new ApiError(404, "Appointment is not found");
     }
+
+    if (
+        (!user._id.equals(appointmentDetails.doctor)) &&
+        (user.role.trim().toLowerCase() !== "doctor")
+    ) {
+        throw new ApiError(403, "You are not authorized to add prescription");
+    }
+
     const prescriptionLocalPath = req.file?.path;
     if (!prescriptionLocalPath) {
         throw new ApiError(400, "Prescription is not uploaded");
@@ -501,41 +516,56 @@ export const getAppointmentHistory = asyncHandler(async (req, res) => {
                 $or: [{ patient: userId }, { doctor: userId }],
             },
         },
-        // {
-        //     $lookup: {
-        //         from: "schedules",
-        //         localField: "schedule",
-        //         foreignField: "_id",
-        //         as: "scheduleDetails",
-        //     },
-        // },
-        // {
-        //     $unwind: "$scheduleDetails",
-        // },
         {
             $match: {
-                "startTime": {
+                startTime: {
                     $lt: new Date(),
                 },
             },
         },
         {
+            $lookup: {
+                from: "users",
+                localField: "doctor",
+                foreignField: "_id",
+                as: "doctorDetails",
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "patient",
+                foreignField: "_id",
+                as: "patientDetails",
+            },
+        },
+        {
+            $unwind: {
+                path: "$doctorDetails",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $unwind: {
+                path: "$patientDetails",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
             $project: {
                 _id: 1,
-                doctor: 1,
-                patient: 1,
-                schedule: 1,
-                payment: 1,
-                startTime:1,
-                endTime:1,
-                mode:1,
-                location:1,
-                // "scheduleDetails.date": 1,
-                // "scheduleDetails.startTime": 1,
-                // "scheduleDetails.endTime": 1,
-                // "scheduleDetails.mode": 1,
-                // "scheduleDetails.location": 1,
-                // "scheduleDetails.bookingSlot": 1,
+                // doctor: 1,
+                // patient: 1,
+                // schedule: 1,
+                // payment: 1,
+                startTime: 1,
+                endTime: 1,
+                mode: 1,
+                location: 1,
+                doctorFirstName: "$doctorDetails.firstName",
+                doctorLastName: "$doctorDetails.lastName",
+                patientFirstName: "$patientDetails.firstName",
+                patientLastName: "$patientDetails.lastName",
             },
         },
     ]);

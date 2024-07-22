@@ -351,7 +351,7 @@ export const updateAvatar = asyncHandler(async (req, res) => {
 })
 
 export const updateCoverImage = asyncHandler(async (req, res) => {
-    const coverImageLocalPath = req.file?.path;
+     const coverImageLocalPath = req.file?.path;
     if (!coverImageLocalPath) {
         throw new ApiError(400, "Cover image is required");
     }

@@ -7,7 +7,7 @@ const router=Router();
 router.use(verifyJWT);
 
 router.route('/create-appointment').post(createAppointment);
-router.route("/cancel-appointment").delete(cancelAppointment);
+router.route("/cancel-appointment").post(cancelAppointment);
 router.route("/get-appointment-details").get(getAppointmentDetails);
 router.route("/add-prescription").post(upload.single("prescription"),addPrescription);
 router.route("/get-prescription").get(getPrescription);
