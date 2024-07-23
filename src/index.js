@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 import { app } from "./app.js"
 import conf from "./conf/conf.js";
+import { refreshAllJobsScheduleAtMidNight } from "./utils/taskScheduling.js";
 
 dotenv.config({
     path: './.env'
@@ -17,6 +18,7 @@ connectDB()
         app.listen(PORT, () => {
             console.log(`⚙️ Server is running at port : ${PORT}`);
         })
+        refreshAllJobsScheduleAtMidNight();
     })
     .catch((err) => {
         console.log("MONGO db connection failed !!!", err);

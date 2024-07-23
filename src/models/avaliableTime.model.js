@@ -7,6 +7,15 @@ const avaliableTimeSchema=new Schema({
     },
     frequencyTime:{
         type:Number,
+    },
+    mode:{
+        type:String,
+        enum:["online","offline"],
+        default:"online"
+    },
+    location:{
+        type:String,
+        required:true,
     }
 });
 export const AvaliableTime=mongoose.model("AvaliableTime",avaliableTimeSchema);

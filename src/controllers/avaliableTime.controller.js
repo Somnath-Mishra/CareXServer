@@ -5,14 +5,19 @@ import { AvaliableTime } from "../models/avaliableTime.model.js";
 import { Doctor } from "../models/doctor.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Types } from "mongoose";
+import { createCronJob } from "../utils/taskScheduling.js";
+import { CronJob } from "../models/cronJob.model.js";
 
 export const createAvaliableTime = asyncHandler(async (req, res) => {
-    const { dateTime, frequency } = req.body;
+    const { dateTime, frequency, mode, location } = req.body;
     if (!dateTime) {
         throw new ApiError(400, "Date and time are required");
     }
     if (!frequency) {
         throw new ApiError(400, "Frequency is required");
+    }
+    if (!mode || !location) {
+        throw new ApiError(400, "Mode and location are required");
     }
     const doctorId = req.user._id;
     const doctor = await Doctor.findById(doctorId);
@@ -25,7 +30,7 @@ export const createAvaliableTime = asyncHandler(async (req, res) => {
             "You are not authorized to create avaliable time"
         );
     }
-    if (doctor.isActive === false) {
+    if (doctor.isActive === "false") {
         throw new ApiError(
             401,
             "You are not authorized to create avaliable time"
@@ -35,6 +40,8 @@ export const createAvaliableTime = asyncHandler(async (req, res) => {
     const avaliableTime = await AvaliableTime.create({
         startTime: regularDateTime,
         frequencyTime: frequency,
+        mode,
+        location,
     });
     if (!avaliableTime) {
         throw new ApiError(
@@ -61,10 +68,14 @@ export const createAvaliableTime = asyncHandler(async (req, res) => {
         );
     }
 
-    res.status(200).json(
+    await createCronJob(dateTime, frequency, doctorId, avaliableTime._id);
+
+    
+
+    res.status(201).json(
         new ApiResponse(
-            200,
-            avaliableTime ,
+            201,
+            avaliableTime,
             "Avaliable time created successfully"
         )
     );
@@ -114,11 +125,11 @@ export const getAvaliableTime = asyncHandler(async (req, res) => {
                 _id: 1,
                 startTime: 1,
                 frequencyTime: 1,
+                location: 1,
+                mode: 1,
             },
         },
     ]);
-    // avaliableTimes=avaliableTimes[0];
-
 
     if (!availableTimes) {
         return res
@@ -160,12 +171,34 @@ export const deleteAvaliableTime = asyncHandler(async (req, res) => {
             "You are not authorized to access this doctor details"
         );
     }
+
+    const doctorObject = await Doctor.findById(doctorId);
+    if (
+        doctorObject.role !== "doctor" ||
+        doctorObject.isActive !== "true" ||
+        !doctorObject._id.equals(doctorId)
+    ) {
+        throw new ApiError(
+            401,
+            "You are not authorized to delete this doctor schedule"
+        );
+    }
+
+    //Remove the schedule from the doctor's available time
+    doctorObject.avaliableTime.pull(avaliableTimeId);
+    await doctorObject.save();
+
     const avaliableTime = await AvaliableTime.findByIdAndDelete(
         avaliableTimeId
     );
     if (!avaliableTime) {
         throw new ApiError(404, "Avaliable time not found");
     }
+
+    //Remove the cron job
+    await CronJob.findOneAndDelete({jobName});
+
+
     res.status(200).json(
         new ApiResponse(200, {}, "Avaliable time deleted successfully")
     );
