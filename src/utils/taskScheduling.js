@@ -4,7 +4,6 @@ import { Doctor } from "../models/doctor.model.js";
 import { CronJob } from "../models/cronJob.model.js";
 import { createScheduleAutomatically } from "../controllers/schedule.controller.js";
 
-//store cron job instances in memory to avoid duplicate jobs
 const cronJobInstances = new Map();
 
 export async function scheduleTask() {
@@ -36,12 +35,12 @@ export const createCronJob = async (
     try {
         const startMoment = moment(startTime, "YYYY-M-D H:m");
         const initialDay = startMoment.date();
-        const initialMonth = startMoment.month() + 1; // months are 0-indexed in moment.js
+        const initialMonth = startMoment.month() + 1; 
         const initialHour = startMoment.hour();
         const initialMinute = startMoment.minute();
         const cronExpression = `${initialMinute} ${initialHour} ${initialDay}-${
             initialDay + frequencyTime
-        } */${frequencyTime} *`;
+        } */${frequencyTime} *`;//This is not correct logic
 
         const jobName = `doctor_${doctorId}_availableTime_${availableTimeId}`;
         console.log(jobName);
