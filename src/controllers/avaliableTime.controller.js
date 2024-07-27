@@ -185,7 +185,7 @@ export const deleteAvaliableTime = asyncHandler(async (req, res) => {
     }
 
     //Remove the schedule from the doctor's available time
-    doctorObject.avaliableTime.pull(avaliableTimeId);
+    // doctorObject.avaliableTime.pull(avaliableTimeId);
     await doctorObject.save();
 
     const avaliableTime = await AvaliableTime.findByIdAndDelete(

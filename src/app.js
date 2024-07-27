@@ -30,7 +30,8 @@ import paymentRouter from './routes/payment.routes.js';
 import scheduleRouter from './routes/schedule.routes.js'
 import doctorRouter from "./routes/doctor.routes.js";
 import adminRouter from "./routes/admin.routes.js"
-import avaliableTimeRouter from "./routes/avaliableTime.routes.js"
+import avaliableTimeRouter from "./routes/avaliableTime.routes.js";
+import healthRouter from "./routes/health.routes.js";
 
 // Routes declaration
 app.use('/api/v1/user', userRouter);
@@ -40,5 +41,6 @@ app.use("/api/v1/schedule",scheduleRouter);
 app.use("/api/v1/doctor", doctorRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/avaliableTime", avaliableTimeRouter);
+app.use("/api/v1/health", healthRouter);
 
 export { app };

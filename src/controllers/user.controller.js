@@ -9,6 +9,7 @@ import { medicalSpecializations } from "./medicalSpecialization.js";
 import { findSpecialization } from "../utils/patientProblemWithSpecialization.js";
 import { findDoctors, getUniqueSpecializations } from "../db/SearchDatabase/problemMapWithSpecilization.mjs";
 import { Doctor } from "../models/doctor.model.js";
+import { get } from "mongoose";
 //Find specific doctor according to their specialization who might resolve
 //problem of the patient
 export const findDoctor = asyncHandler(async (req, res) => {
@@ -139,8 +140,14 @@ export const registerUser = asyncHandler(async (req, res) => {
     if (!createdUser) {
         throw new ApiError(500, "User creation failed");
     }
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
     return res.
         status(201)
+        .setCookie('accessToken',user.accessToken,options)
+        .setCookie('refreshToken', user.refreshToken,options)
         .json(new ApiResponse(200, createdUser, "User registered successfully"));
 
 })
@@ -432,6 +439,8 @@ export const getDoctorDetailsToSolvePatientProblem = asyncHandler(async (req, re
             }
         }
     ]);
+
+    console.log(getUniqueSpecialization);
 
     getUniqueSpecialization = getUniqueSpecialization[0]?.specializations;
     if (!getUniqueSpecialization) {

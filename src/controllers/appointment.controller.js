@@ -566,6 +566,7 @@ export const getAppointmentHistory = asyncHandler(async (req, res) => {
                 doctorLastName: "$doctorDetails.lastName",
                 patientFirstName: "$patientDetails.firstName",
                 patientLastName: "$patientDetails.lastName",
+                prescription: 1,
             },
         },
     ]);
