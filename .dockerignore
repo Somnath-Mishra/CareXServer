@@ -20,8 +20,7 @@ Dockerfile
 .prettierrc
 .prettierignore
 
-# Ignore the build directory (if you have one)
-build
+
 
 # Ignore any log files
 *.log
