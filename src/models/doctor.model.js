@@ -15,7 +15,7 @@ const doctorSchema = new Schema({
         required: true
     },
     specialization: {
-        type: Array,//array of string
+        type: [String],//array of string
         required: true
     },
     visitFees: {
