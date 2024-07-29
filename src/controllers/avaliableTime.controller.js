@@ -10,6 +10,7 @@ import { CronJob } from "../models/cronJob.model.js";
 
 export const createAvaliableTime = asyncHandler(async (req, res) => {
     const { dateTime, frequency, mode, location } = req.body;
+    console.log(dateTime, frequency, mode, location);
     if (!dateTime) {
         throw new ApiError(400, "Date and time are required");
     }
@@ -40,8 +41,8 @@ export const createAvaliableTime = asyncHandler(async (req, res) => {
     const avaliableTime = await AvaliableTime.create({
         startTime: regularDateTime,
         frequencyTime: frequency,
-        mode,
-        location,
+        mode:mode.toLowerCase(),
+        location:location,
     });
     if (!avaliableTime) {
         throw new ApiError(

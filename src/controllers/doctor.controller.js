@@ -2,17 +2,28 @@ import { Doctor } from "../models/doctor.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
-import {uploadOnCloudinary, uploadPDFOnCloudinary} from "../utils/cloudinary.js"
-import { User } from "../models/user.model.js"
+import {
+    uploadOnCloudinary,
+    uploadPDFOnCloudinary,
+} from "../utils/cloudinary.js";
+import { User } from "../models/user.model.js";
 
 export const uploadDoctorSpecificDetails = asyncHandler(async (req, res) => {
-    const { degree,
+    const {
+        degree,
         instituteName,
         specialization,
         visitFees,
-        avaliableTimeIds
+        avaliableTimeIds,
     } = req.body;
-    if (!degree || !instituteName || !specialization || !visitFees || !avaliableTimeId || !frequencyOfSchedule) {
+    if (
+        !degree ||
+        !instituteName ||
+        !specialization ||
+        !visitFees ||
+        !avaliableTimeId ||
+        !frequencyOfSchedule
+    ) {
         throw new ApiError(400, "All fields are required");
     }
     const doctorDetails = await Doctor.findById(req.user.id);
@@ -20,26 +31,29 @@ export const uploadDoctorSpecificDetails = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Doctor not found");
     }
 
-    const role = 'doctor';
-    const doctor = await Doctor.findByIdAndUpdate(req.user.id, {
-        degree,
-        instituteName,
-        specialization,
-        visitFees,
-        avaliableTimeIds,
-        role
-    }, { new: true })
+    const role = "doctor";
+    const doctor = await Doctor.findByIdAndUpdate(
+        req.user.id,
+        {
+            degree,
+            instituteName,
+            specialization,
+            visitFees,
+            avaliableTimeIds,
+            role,
+        },
+        { new: true }
+    );
     if (!doctor) {
-        throw new ApiError(500, "Something went wrong while updating doctor details");
+        throw new ApiError(
+            500,
+            "Something went wrong while updating doctor details"
+        );
     }
-    res
-        .status(200)
-        .json(new ApiResponse(
-            200,
-            doctor,
-            "Doctor details updated successfully"
-        ))
-})
+    res.status(200).json(
+        new ApiResponse(200, doctor, "Doctor details updated successfully")
+    );
+});
 
 export const getPatientDetails = asyncHandler(async (req, res) => {
     const patientId = req.query.patientId;
@@ -52,27 +66,26 @@ export const getPatientDetails = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Doctor not found");
     }
     if (doctor.role?.trim() !== "doctor") {
-        throw new ApiError(401, "You are not authorized to view patient details");
+        throw new ApiError(
+            401,
+            "You are not authorized to view patient details"
+        );
     }
-    const patient = await User.findById(patientId).select("-password -refreshToken");
+    const patient = await User.findById(patientId).select(
+        "-password -refreshToken"
+    );
     if (!patient) {
         throw new ApiError(404, "Patient not found");
     }
     if (patient.role?.trim() !== "user") {
         throw new ApiError(400, "Patient is not a user");
     }
-    res
-        .status(200)
-        .json(new ApiResponse(
-            200,
-            patient,
-            "Patient details fetched successfully"
-        ))
-})
+    res.status(200).json(
+        new ApiResponse(200, patient, "Patient details fetched successfully")
+    );
+});
 
-export const referToAnotherDoctor = asyncHandler(async (req, res) => {
-
-})
+export const referToAnotherDoctor = asyncHandler(async (req, res) => {});
 
 export const registerDoctor = asyncHandler(async (req, res) => {
     const {
@@ -87,7 +100,7 @@ export const registerDoctor = asyncHandler(async (req, res) => {
         degree,
         instituteName,
         specialization,
-        visitFees
+        visitFees,
     } = req.body;
     if (
         [
@@ -102,13 +115,13 @@ export const registerDoctor = asyncHandler(async (req, res) => {
             degree,
             instituteName,
             specialization,
-            visitFees
+            visitFees,
         ].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required");
     }
     const exitedUser = await Doctor.findOne({
-        $or: [{ email }, { userName }]
+        $or: [{ email }, { userName }],
     });
     if (exitedUser) {
         throw new ApiError(409, "User with email or username already exists");
@@ -130,7 +143,11 @@ export const registerDoctor = asyncHandler(async (req, res) => {
     }
 
     let coverImageLocalPath;
-    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+    if (
+        req.files &&
+        Array.isArray(req.files.coverImage) &&
+        req.files.coverImage.length > 0
+    ) {
         coverImageLocalPath = req.files.coverImage[0].path;
     }
     let coverImage;
@@ -138,18 +155,22 @@ export const registerDoctor = asyncHandler(async (req, res) => {
         coverImage = await uploadOnCloudinary(coverImageLocalPath);
     }
 
-    const licenceLocalPath=req.files?.licence[0]?.path;
-    if(!licenceLocalPath){
-        throw new ApiError(400, "Licence is required")
+    const licenceLocalPath = req.files?.licence[0]?.path;
+    if (!licenceLocalPath) {
+        throw new ApiError(400, "Licence is required");
     }
-    const licence=await uploadPDFOnCloudinary(licenceLocalPath);
-    if(!licence.url){
+    const licence = await uploadPDFOnCloudinary(licenceLocalPath);
+    if (!licence.url) {
         throw new ApiError(500, "Licence upload failed");
     }
 
-    const specialiazations=specialization.split(',');
-    if(specialiazations.length===0){
-        throw new ApiError(400, "Specialization is required and also comma seperated");
+    const specialiazations = specialization.split(",");
+    console.log(specialiazations);
+    if (specialiazations.length === 0) {
+        throw new ApiError(
+            400,
+            "Specialization is required and also comma seperated"
+        );
     }
 
     const doctor = await Doctor.create({
@@ -162,26 +183,30 @@ export const registerDoctor = asyncHandler(async (req, res) => {
         password,
         degree,
         instituteName,
-        specialiazations,
+        specialization:specialiazations,
         visitFees,
         role: "doctor",
         licence: licence.url,
         avatar: avatar.url,
         coverImage: coverImage?.url || "",
     });
-    if(!doctor){
+    if (!doctor) {
         throw new ApiError(500, "Doctor creation failed");
     }
-    const createdDoctor = await Doctor.findById(doctor?._id).select("-password -refreshToken");
-    if(!createdDoctor){
+    const createdDoctor = await Doctor.findById(doctor?._id).select(
+        "-password -refreshToken"
+    );
+    if (!createdDoctor) {
         throw new ApiError(500, "Something went wrong while creating doctor");
     }
-    res
-        .status(201)
-        .json(new ApiResponse(
-            201,
-            createdDoctor,
-            "Doctor registered successfully"
-        ))
-})
 
+
+    res.status(201)
+        .json(
+            new ApiResponse(
+                201,
+                createdDoctor,
+                "Doctor registered successfully"
+            )
+        );
+});
