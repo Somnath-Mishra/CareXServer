@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64 node:18 as builder
+FROM node:18 as builder
 
 WORKDIR /build
 
@@ -7,7 +7,7 @@ COPY . .
 
 RUN npm install
 
-FROM --platform=linux/arm64 node:18 as runner
+FROM node:18 as runner
 
 WORKDIR /app
 
