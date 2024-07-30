@@ -500,47 +500,37 @@ export const getDoctorDetailsToSolvePatientProblem = asyncHandler(
         specializations = specializations.split(",").map(s=>s.trim());
         console.log(specializations);
 
-        // const doctors = await Doctor.aggregate([
-        //     {
-        //         $match: {
-        //             specialization: { $in: specializations },
-        //         },
-        //     },
-        //     {
-        //         $addFields: {
-        //             doctorId: "$_id",
-        //         },
-        //     },
-        //     {
-        //         $group: {
-        //             _id: "$doctorId",
-        //             details: { $first: "$$ROOT" },
-        //         },
-        //     },
-        //     {
-        //         $replaceRoot: {
-        //             newRoot: "$details",
-        //         },
-        //     },
-        //     {
-        //         $project: {
-        //             password: 0,
-        //             refreshToken: 0,
-        //         },
-        //     },
-        // ]);
-
-        const doctors = await Doctor.find(
+        const doctors = await Doctor.aggregate([
             {
-                specialization: { $in: specializations },
+                $match: {
+                    specialization: { $in: specializations },
+                },
             },
             {
-                password: 0,
-                refreshToken: 0,
-            }
-        );
+                $addFields: {
+                    doctorId: "$_id",
+                },
+            },
+            {
+                $group: {
+                    _id: "$doctorId",
+                    details: { $first: "$$ROOT" },
+                },
+            },
+            {
+                $replaceRoot: {
+                    newRoot: "$details",
+                },
+            },
+            {
+                $project: {
+                    password: 0,
+                    refreshToken: 0,
+                },
+            },
+        ]);
 
-        console.log(doctors);
+
 
         if (!doctors) {
             throw new ApiError(404, "Doctor not found");

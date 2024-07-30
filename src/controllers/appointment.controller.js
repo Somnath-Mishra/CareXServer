@@ -7,6 +7,7 @@ import { Payment } from "../models/payment.model.js";
 import { Appointment } from "../models/appointment.model.js";
 import { Doctor } from "../models/doctor.model.js";
 import { User } from "../models/user.model.js";
+import mongoose, {Types} from "mongoose";
 import {
     uploadOnCloudinary,
     uploadPDFOnCloudinary,
@@ -258,23 +259,18 @@ export const getAppointmentDetails = asyncHandler(async (req, res) => {
     if (!userId) {
         throw new ApiError(400, "User is not found");
     }
+    
 
     const upcomingAppointments = await Appointment.aggregate([
         {
             $match: {
                 $or: [{ patient: userId }, { doctor: userId }],
-            },
-        },
-        {
-            $match: {
-                startTime: {
-                    $gt: new Date(),
-                },
+                // startTime: { $gt: new Date() }, // Filter for future appointments
             },
         },
         {
             $lookup: {
-                from: "users",
+                from: "users", // Collection name for user details
                 localField: "doctor",
                 foreignField: "_id",
                 as: "doctorDetails",
@@ -282,7 +278,7 @@ export const getAppointmentDetails = asyncHandler(async (req, res) => {
         },
         {
             $lookup: {
-                from: "users",
+                from: "users", // Collection name for user details
                 localField: "patient",
                 foreignField: "_id",
                 as: "patientDetails",
@@ -303,19 +299,27 @@ export const getAppointmentDetails = asyncHandler(async (req, res) => {
         {
             $project: {
                 _id: 1,
-                // doctor: 1,
-                // patient: 1,
                 startTime: 1,
                 endTime: 1,
                 mode: 1,
                 location: 1,
-                doctorFirstName: "$doctorDetails.firstName",
-                doctorLastName: "$doctorDetails.lastName",
-                patientFirstName: "$patientDetails.firstName",
-                patientLastName: "$patientDetails.lastName",
+                doctorFirstName: {
+                    $ifNull: ["$doctorDetails.firstName", "Unknown"],
+                },
+                doctorLastName: {
+                    $ifNull: ["$doctorDetails.lastName", "Unknown"],
+                },
+                patientFirstName: {
+                    $ifNull: ["$patientDetails.firstName", "Unknown"],
+                },
+                patientLastName: {
+                    $ifNull: ["$patientDetails.lastName", "Unknown"],
+                },
             },
         },
     ]);
+
+    console.log(upcomingAppointments);
 
     if (upcomingAppointments.length === 0) {
         res.status(200).json(
@@ -354,11 +358,12 @@ export const addPrescription = asyncHandler(async (req, res) => {
     }
 
     const prescriptionLocalPath = req.file?.path;
+    console.log(prescriptionLocalPath);
     if (!prescriptionLocalPath) {
         throw new ApiError(400, "Prescription is not uploaded");
     }
     const prescription = await uploadPDFOnCloudinary(prescriptionLocalPath);
-    if (!prescription.url) {
+    if (!prescription?.url) {
         throw new ApiError(
             500,
             "Something went wrong while uploading prescription"

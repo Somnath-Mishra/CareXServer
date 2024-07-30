@@ -69,7 +69,7 @@ export const createScheduleAutomatically = async (
             //const meetingLink=await googleMeet.createLink();
             //location=meetingLink
         }
-        const doctor = Doctor.findById(doctorId).select(
+        const doctor =await Doctor.findById(doctorId).select(
             "-password -refreshToken"
         );
         if (!doctor) {
@@ -91,7 +91,8 @@ export const createScheduleAutomatically = async (
         }
         return schedule;
     } catch (error) {
-        console.log(error);        
+        console.log(error);  
+        throw error;      
     }
 };
 
@@ -203,18 +204,19 @@ export const getScheduleDetails = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Doctor not found");
     }
 
+    const now = new Date();
+
     const scheduleDetails = await Schedule.aggregate([
         {
             $match: {
                 doctorId: doctor._id,
+                // startTime: { $gt: now }, // Only upcoming schedules
             },
         },
         {
             $match: {
                 bookingSlot: {
-                    $elemMatch: {
-                        $eq: null,
-                    },
+                    $elemMatch: { $eq: null }, // At least one available slot
                 },
             },
         },

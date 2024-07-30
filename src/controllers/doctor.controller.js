@@ -164,8 +164,7 @@ export const registerDoctor = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Licence upload failed");
     }
 
-    const specialiazations = specialization.split(",");
-    console.log(specialiazations);
+    const specialiazations = specialization.split(",").map(spec=>spec.trim());
     if (specialiazations.length === 0) {
         throw new ApiError(
             400,
