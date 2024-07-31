@@ -9,7 +9,6 @@ async function ProblemMap(disease) {
     );
 
     const uniqueDetails = await uniqueDoctorsList(doctorDetails.flat());
-    console.log(uniqueDetails);
     return uniqueDetails;
   } else {
     let doctorsDetails = await Doctor.find({
@@ -29,22 +28,18 @@ async function findDoctors(specialization) {
       // Check if details are found
       doctorArray.push(details);
   }
-  console.log("findDoctors(): doctorArray : " + doctorArray);
   let doctorsInfo = await uniqueDoctorsList(doctorArray);
   return doctorsInfo;
 }
 
 async function findDoctorDetails(specialization) {
   let doctorsDetails = await Doctor.find({ specialization: specialization }).select("-password -refreshToken");
-  console.log("findDoctorDetails(): " + doctorsDetails);
   return doctorsDetails;
 }
 
 async function uniqueDoctorsList(doctorsDetails) {
   const uniqueDoctorsSet = new Set(doctorsDetails.map(JSON.stringify));
-  console.log("uniqueDoctorsList(): uniqueDoctorsSet:  " + uniqueDoctorsSet);
   const uniqueDoctorsArray = Array.from(uniqueDoctorsSet).map(JSON.parse);
-  console.log("uniqueDoctorsArray: " + uniqueDoctorsArray);
   return uniqueDoctorsArray;
 }
 
@@ -56,7 +51,6 @@ async function getUniqueSpecializations() {
   // ]);
   // let specializations = uniqueSpecialization.map(spec => ({ name: spec._id }));
 
-  // console.log(specializations); // Log to verify the structure
 
   // return specializations;
   const availableKeywords = [

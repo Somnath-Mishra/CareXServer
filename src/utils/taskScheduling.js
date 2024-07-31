@@ -248,7 +248,6 @@ export const createCronJob = async (
                 location,
                 doctorId
             );
-            console.log(schedule);
 
             // Schedule the interval cron job after the initial run
             const intervalJob = cron.schedule(

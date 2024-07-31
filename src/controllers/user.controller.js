@@ -498,7 +498,6 @@ export const getDoctorDetailsToSolvePatientProblem = asyncHandler(
             );
         }
         specializations = specializations.split(",").map(s=>s.trim());
-        console.log(specializations);
 
         const doctors = await Doctor.aggregate([
             {

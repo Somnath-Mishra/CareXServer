@@ -1,9 +1,8 @@
 import ServerlessHttp from "serverless-http";
 import dotenv from "dotenv";
-import connectDB from "./db/index.js";
-import { app } from "./app.js";
-// import conf from "./conf/conf.js";
-import { refreshAllJobsScheduleAtMidNight } from "./utils/taskScheduling.js";
+import connectDB from "./src/db/index.js";
+import { app } from "./src/app.js";
+import {refreshAllJobsScheduleAtMidNight} from './src/utils/taskScheduling.js'
 
 dotenv.config({
     path: "./.env",
@@ -12,7 +11,7 @@ dotenv.config({
 const handler = async (event, context) => {
     context.callbackWaitsForEmptyEventLoop = false; // ensures Lambda doesn't wait for the DB connection to close
     await connectDB();
-    refreshAllJobsScheduleAtMidNight();
+    // refreshAllJobsScheduleAtMidNight();
     return ServerlessHttp(app)(event, context);
 };
 

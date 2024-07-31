@@ -319,7 +319,6 @@ export const getAppointmentDetails = asyncHandler(async (req, res) => {
         },
     ]);
 
-    console.log(upcomingAppointments);
 
     if (upcomingAppointments.length === 0) {
         res.status(200).json(
@@ -358,7 +357,6 @@ export const addPrescription = asyncHandler(async (req, res) => {
     }
 
     const prescriptionLocalPath = req.file?.path;
-    console.log(prescriptionLocalPath);
     if (!prescriptionLocalPath) {
         throw new ApiError(400, "Prescription is not uploaded");
     }
