@@ -121,7 +121,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
 
-    if (!avatar) {
+    if (!avatar?.url) {
         throw new ApiError(500, "Avatar upload failed");
     }
 

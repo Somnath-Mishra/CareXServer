@@ -9,6 +9,7 @@ credentials.json
 
 .serverless
 
+
 # Logs
 logs
 *.log
