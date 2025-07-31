@@ -14,7 +14,7 @@ connectDB()
         app.on('error', (error) => {
             console.log(`ERROR: ${error}`);
         });
-        const PORT = conf.serverPort || 9000;
+        const PORT = conf.serverPort || 8080;
         app.listen(PORT, () => {
             console.log(`⚙️ Server is running at port : ${PORT}`);
         })
